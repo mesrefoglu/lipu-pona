@@ -1,5 +1,6 @@
 import { Box, Flex, Avatar, Text, Image, HStack, Icon, Divider, Button, Link } from "@chakra-ui/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaRegComment } from "react-icons/fa";
 import { likeApi } from "../api/endpoints.js";
 import { API_URL, COLOR_3, COLOR_4 } from "../constants/constants.js";
@@ -33,6 +34,8 @@ const Post = ({
     comment_count,
     formatted_date,
 }) => {
+    const navigate = useNavigate();
+
     const [liked, setLiked] = useState(is_liked);
     const [likes, setLikes] = useState(like_count);
 
@@ -53,17 +56,19 @@ const Post = ({
     return (
         <Box w="full" mb={6}>
             <Flex align="center" mb={3}>
-                <Avatar size="md" src={authorPic ? API_URL + authorPic : undefined} />
-                <HStack ml={3} spacing={2}>
-                    {authorName && (
-                        <Text fontWeight="bold" color={COLOR_4}>
-                            {authorName}
+                <Flex onClick={() => navigate(`/${username}`)} cursor="pointer">
+                    <Avatar size="md" src={authorPic ? API_URL + authorPic : undefined} />
+                    <HStack ml={3} spacing={2}>
+                        {authorName && (
+                            <Text fontWeight="bold" color={COLOR_4}>
+                                {authorName}
+                            </Text>
+                        )}
+                        <Text fontSize="sm" color={COLOR_4}>
+                            @{username}
                         </Text>
-                    )}
-                    <Text fontSize="sm" color={COLOR_4}>
-                        @{username}
-                    </Text>
-                </HStack>
+                    </HStack>
+                </Flex>
             </Flex>
 
             {imageSrc && (

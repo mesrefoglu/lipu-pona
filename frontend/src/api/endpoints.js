@@ -1,22 +1,9 @@
 import axios from "axios";
 import { API_URL } from "../constants/constants.js";
-import { getCsrfToken } from "./csrf.js";
 
 const BASE_URL = API_URL;
 
 const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
-
-api.interceptors.request.use(
-    (config) => {
-        if (config.method !== "get") {
-            config.headers["X-CSRFToken"] = getCsrfToken();
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
 
 export const getUserApi = async (username) => {
     try {
@@ -57,7 +44,6 @@ export const registerApi = async (username, name, email, password) => {
 export const getAuth = async () => {
     try {
         const response = await api.get("/authenticated/");
-        console.log("Auth response:", response);
         return response.data;
     } catch (error) {
         console.error("Error fetching auth data:", error);
@@ -71,6 +57,16 @@ export const followApi = async (username) => {
         return response.data;
     } catch (error) {
         console.error("Error following user:", error);
+        throw error;
+    }
+};
+
+export const getPostApi = async (id) => {
+    try {
+        const response = await api.get(`/post/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching post:", error);
         throw error;
     }
 };
@@ -96,11 +92,35 @@ export const likeApi = async (postId) => {
 };
 
 export const feedApi = async (page = 1) => {
+    const response = await api.get(`/feed/?page=${page}`);
+    return response.data;
+};
+
+export const checkUsernameApi = async (username) => {
     try {
-        const response = await api.get(`/feed/?page=${page}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching feed:", error);
-        throw error;
+        const res = await api.get(`/username-exists/`, { params: { username } });
+        return res.data.exists;
+    } catch {
+        return true;
     }
+};
+
+export const checkEmailApi = async (email) => {
+    try {
+        const res = await api.get(`/email-exists/`, { params: { email } });
+        return res.data.exists;
+    } catch {
+        return true;
+    }
+};
+
+export const createPostApi = async (imageFile, text) => {
+    const formData = new FormData();
+    formData.append("text", text);
+    if (imageFile) formData.append("image", imageFile);
+
+    const res = await api.post("/create-post/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
 };

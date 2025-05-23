@@ -11,10 +11,10 @@ const Navbar = () => {
     };
 
     return (
-        <Flex w="100vw" h="90px" bg={COLOR_3} justifyContent="space-between" alignItems="center" px={6}>
+        <Flex w="100vw" minH="50px" maxH="8vh" bg={COLOR_3} justifyContent="space-between" alignItems="center" px={6}>
             <HStack w="100%" justifyContent="space-between">
                 <Text
-                    fontSize="3xl"
+                    fontSize="2xl"
                     fontWeight="bold"
                     color={COLOR_1}
                     onClick={() => handleNavigate("")}
@@ -22,12 +22,7 @@ const Navbar = () => {
                 >
                     lipu kule pona
                 </Text>
-                <HStack spacing={4} onClick={() => handleNavigate("admin")} cursor="pointer">
-                    <CgProfile size="40px" />
-                    <Text fontSize="xl" fontWeight="bold" color={COLOR_1}>
-                        lipu mi
-                    </Text>
-                </HStack>
+                <CgProfile size="40px" onClick={() => handleNavigate("admin")} cursor="pointer" />
             </HStack>
         </Flex>
     );

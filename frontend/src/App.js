@@ -5,13 +5,14 @@ import { ChakraProvider } from "@chakra-ui/react";
 
 import Layout from "./components/layout.js";
 import PrivateRoute from "./components/privateRoute.js";
+import { AuthProvider } from "./contexts/useAuth.js";
 
 import Home from "./routes/home.js";
 import Login from "./routes/login.js";
 import UserProfile from "./routes/userProfile.js";
 import Register from "./routes/register.js";
-
-import { AuthProvider } from "./contexts/useAuth.js";
+import CreatePost from "./routes/createPost.js";
+import SinglePost from "./routes/singlePost.js";
 
 function App() {
     return (
@@ -35,6 +36,26 @@ function App() {
                                 <Layout>
                                     <PrivateRoute>
                                         <UserProfile />
+                                    </PrivateRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/post/:id"
+                            element={
+                                <Layout>
+                                    <PrivateRoute>
+                                        <SinglePost />
+                                    </PrivateRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/post/create"
+                            element={
+                                <Layout>
+                                    <PrivateRoute>
+                                        <CreatePost />
                                     </PrivateRoute>
                                 </Layout>
                             }

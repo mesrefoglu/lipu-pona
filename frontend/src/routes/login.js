@@ -13,7 +13,7 @@ import {
     AlertIcon,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
@@ -21,12 +21,24 @@ import { useAuth } from "../contexts/useAuth.js";
 const Login = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error] = useState("");
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
     const { authLogin } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        authLogin(username, password);
+        authLogin(username, password)
+            .then((response) => {
+                if (response.success) {
+                    navigate(`/${username}`);
+                } else {
+                    setError("nimi lipu anu nimi len li suli");
+                }
+            })
+            .catch((error) => {
+                console.error("Login error:", error);
+                setError("nimi lipu anu nimi len li suli");
+            });
     };
 
     return (
@@ -46,12 +58,24 @@ const Login = () => {
 
                     <FormControl id="username">
                         <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
-                        <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
                     </FormControl>
 
                     <FormControl id="password">
                         <FormLabel color={COLOR_1}>nimi len</FormLabel>
-                        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
                     </FormControl>
 
                     <Button
@@ -64,7 +88,7 @@ const Login = () => {
                         type="submit"
                         isDisabled={!username || !password}
                     >
-                        pana
+                        o pana
                     </Button>
 
                     <Text fontSize="sm" color={COLOR_1}>

@@ -1,61 +1,73 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
 from django.core.paginator import Paginator
+from django.db import IntegrityError
 from .models import MyUser, Post
 from .serializers import MyUserSerializer, UserRegisterSerializer, PostSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from django.middleware.csrf import get_token
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         try:
-            response = super().post(request, *args, **kwargs)
-            tokens = response.data
-            access_token = tokens.get('access')
-            refresh_token = tokens.get('refresh')
-            csrf_token = get_token(request)
+            parent_resp = super().post(request, *args, **kwargs)
+            access = parent_resp.data["access"]
+            refresh = parent_resp.data["refresh"]
+        except Exception:
+            logger.exception("JWT login failed")
+            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
-            response = Response()
-            response.data = {'success': True}
-            response.set_cookie(key='access_token', value=access_token, httponly=True, secure=True, samesite='Lax', path='/')
-            response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, secure=True, samesite='Lax', path='/')
-            response.set_cookie(key='csrftoken', value=csrf_token, samesite='Lax', secure=True)
-
-            return response
-        except:
-            return Response({'success': False})
+        resp = Response({"success": True})
+        resp.set_cookie(
+            key="access_token",
+            value=access,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            path="/",
+        )
+        resp.set_cookie(
+            key="refresh_token",
+            value=refresh,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            path="/",
+        )
+        return resp
         
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        request.data["refresh"] = refresh_token
         try:
-            refresh_token = request.COOKIES.get('refresh_token')
-            request.data['refresh'] = refresh_token
+            parent_resp = super().post(request, *args, **kwargs)
+            access = parent_resp.data["access"]
+        except Exception:
+            logger.exception("JWT refresh failed")
+            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
-            response = super().post(request, *args, **kwargs)
-            tokens = response.data
-            access_token = tokens.get('access')
-            csrf_token = get_token(request)
+        resp = Response({"success": True})
+        resp.set_cookie(
+            key="access_token",
+            value=access,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            path="/",
+        )
+        return resp
 
-            response = Response()
-            response.data = {'success': True}
-            response.set_cookie(key='access_token', value=access_token, httponly=True, secure=True, samesite='Lax', path='/')
-            response.set_cookie(key='csrftoken', value=get_token(request), samesite='Lax', secure=True)
-            
-            return response
-        except:
-            return Response({'success': False})
-
-@ensure_csrf_cookie
-@api_view(['GET'])
-def GetCsrfToken(request):
-    return Response({"success": True})
-
-@csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) 
-def GetUserProfile(request, username):
+def GetUserProfile(request, username):    
     try:
         user = MyUser.objects.get(username=username)
     except MyUser.DoesNotExist:
@@ -69,40 +81,66 @@ def GetUserProfile(request, username):
     except:
         return Response({"error": "Error serializing user data."}, status=404)
 
-@csrf_protect
 @api_view(['POST'])
 def Register(request):
     serializer = UserRegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"success": True}, status=status.HTTP_201_CREATED)
+    except Exception as exc:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Authenticated(request):
     return Response("authenticated")
 
-@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ToggleFollow(request):
-    try:
-        user = MyUser.objects.get(username=request.user.username)
-        user_to_follow = MyUser.objects.get(username=request.data['username'])
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=404)
-    try:
-        if user in user_to_follow.followers.all():
-            user_to_follow.followers.remove(user)
-        else:
-            user_to_follow.followers.add(user)
-        return Response({"success": True})
-    except:
-        return Response({"error": "Error toggling follow status."}, status=404)
+    target_username = request.data.get("username")
+    if not target_username:
+        return Response(
+            {"detail": "username missing"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
-@csrf_protect
+    try:
+        target_user = MyUser.objects.get(username=target_username)
+    except MyUser.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        if request.user in target_user.followers.all():
+            target_user.followers.remove(request.user)
+            following = False
+        else:
+            target_user.followers.add(request.user)
+            following = True
+    except IntegrityError:
+        logger.exception("DB error while toggling follow")
+        return Response(
+            {"detail": "Could not update follow status."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response({"success": True, "following": following})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetPost(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
+
+    serializer = PostSerializer(post)
+
+    data = serializer.data
+    data['is_liked'] = request.user in post.likes.all()
+
+    return Response(data)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def GetPosts(request, username):
@@ -122,8 +160,7 @@ def GetPosts(request, username):
         data.append(post)
 
     return Response(data)
-    
-@csrf_protect
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Feed(request):
@@ -136,20 +173,85 @@ def Feed(request):
     serializer = PostSerializer(page_obj.object_list, many=True, context={'request': request})
     return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
 
-@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ToggleLike(request):
-    try:
-        post = Post.objects.get(id=request.data['id'])
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=404)
+    post_id = request.data.get("id")
+    if not post_id:
+        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     try:
-        if request.user in post.likes.all():
-            post.likes.remove(request.user)
-        else:
-            post.likes.add(request.user)
-        return Response({"success": True})
-    except:
-        return Response({"error": "Error toggling like status."}, status=404)
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+
+    return Response({"success": True, "liked": liked})
+
+@api_view(["GET"])
+def UsernameExists(request):
+    username = request.query_params.get("username", "").strip().lower()
+    exists = MyUser.objects.filter(username=username).exists()
+    return Response({"exists": exists})
+
+@api_view(["GET"])
+def EmailExists(request):
+    email = request.query_params.get("email", "").strip().lower()
+    exists = MyUser.objects.filter(email=email).exists()
+    return Response({"exists": exists})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def CreatePost(request):
+    data = request.data
+
+    try:
+        user = MyUser.objects.get(username=request.user.username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+    
+    try:
+        post = Post.objects.create(
+            user=user,
+            image=data.get('image', None),
+            text=data.get('text', ''),
+        )
+    except Exception as e:
+        logger.exception("Error creating post")
+        return Response({"error": "Error creating post."}, status=500)
+
+    serializer = PostSerializer(post)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def EditPost(request):
+#     data = request.data
+#     post_id = data.get('id')
+#     text = data.get('text', None)
+
+#     try:
+#         post = Post.objects.get(id=post_id)
+#     except Post.DoesNotExist:
+#         return Response({"error": "Post not found."}, status=404)
+
+#     if post.user != request.user:
+#         return Response({"error": "You do not have permission to edit this post."}, status=403)
+
+#     if text is not None:
+#         post.text = text
+
+#     post.edited = True
+#     post.save()
+
+#     serializer = PostSerializer(post)
+
+#     return Response(serializer.data, status=status.HTTP_200_OK)

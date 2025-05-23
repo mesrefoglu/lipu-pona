@@ -14,29 +14,37 @@ import {
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 
-import { registerApi } from "../api/endpoints.js";
+import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
 import { useAuth } from "../contexts/useAuth.js";
-import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_2, COLOR_3, COLOR_4 } from "../constants/constants.js";
 
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-const getErrors = ({ username, email, password, confirmPassword }) => ({
-    username: !username
+const getErrors = (fields, usernameTaken, emailTaken) => ({
+    username: !fields.username
         ? "nimi lipu li wile."
-        : usernameRegex.test(username)
-        ? ""
-        : "nimi ilo li wile lon 3-20 sitelen. sitelen ni li ken jo e sitelen nimi en sitelen nanpa.",
-    email: !email ? "lipu toki ilo li wile." : emailRegex.test(email) ? "" : "o pana e lipu toki ilo pona.",
-    password: !password
+        : !usernameRegex.test(fields.username)
+        ? "nimi ilo li wile lon 3-20 sitelen. sitelen ni li ken jo e sitelen nimi en sitelen nanpa."
+        : usernameTaken
+        ? "nimi lipu ni li lon. o ante."
+        : "",
+    email: !fields.email
+        ? "lipu toki ilo li wile."
+        : !emailRegex.test(fields.email)
+        ? "o pana e lipu toki ilo pona."
+        : emailTaken
+        ? "lipu toki ilo ni li lon. o ante."
+        : "",
+    password: !fields.password
         ? "nimi len li wile."
-        : passwordRegex.test(password)
+        : passwordRegex.test(fields.password)
         ? ""
         : "nimi len sina li wile lon suli 8 sitelen. nimi li wile jo e sitelen nimi en sitelen nanpa.",
-    confirmPassword: !confirmPassword
+    confirmPassword: !fields.confirmPassword
         ? "o pana e nimi len a."
-        : confirmPassword === password
+        : fields.confirmPassword === fields.password
         ? ""
         : "nimi len li sama ala.",
 });
@@ -57,15 +65,35 @@ const Register = () => {
         confirmPassword: false,
     });
 
-    const navigate = useNavigate();
-    const { authLogin } = useAuth(); // ← NEW
+    const [usernameTaken, setUsernameTaken] = useState(false);
+    const [emailTaken, setEmailTaken] = useState(false);
 
-    const errors = getErrors(values);
+    const navigate = useNavigate();
+    const { authLogin } = useAuth();
+
+    const errors = getErrors(values, usernameTaken, emailTaken);
     const hasErrors = Object.values(errors).some(Boolean);
 
-    const handleChange = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
+    const handleChange = (field) => (e) => {
+        const val = e.target.value;
+        setValues((v) => ({ ...v, [field]: val }));
+        if (field === "username") setUsernameTaken(false);
+        if (field === "email") setEmailTaken(false);
+    };
 
-    const handleBlur = (field) => setTouched((t) => ({ ...t, [field]: true }));
+    const handleBlur = async (field) => {
+        setTouched((t) => ({ ...t, [field]: true }));
+
+        if (field === "username" && usernameRegex.test(values.username)) {
+            const taken = await checkUsernameApi(values.username);
+            setUsernameTaken(taken);
+        }
+
+        if (field === "email" && emailRegex.test(values.email)) {
+            const taken = await checkEmailApi(values.email);
+            setEmailTaken(taken);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,7 +108,7 @@ const Register = () => {
         const { username, name, email, password } = values;
         const data = await registerApi(username, name, email, password);
 
-        if (data.username) {
+        if (data.success) {
             await authLogin(username, password);
             navigate("/");
         }
@@ -97,35 +125,60 @@ const Register = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit}>
                     <Heading size="lg" textAlign="center" color={COLOR_1}>
-                        pana e lipu sin
+                        o pana e lipu sin
                     </Heading>
 
                     <FormControl id="username" isInvalid={touched.username && !!errors.username}>
                         <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
-                        <Input type="text" {...fieldProps("username")} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="text"
+                            {...fieldProps("username")}
+                        />
                         {touched.username && errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
                     </FormControl>
 
                     <FormControl id="name">
                         <FormLabel color={COLOR_1}>nimi</FormLabel>
-                        <Input type="text" {...fieldProps("name")} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="text"
+                            {...fieldProps("name")}
+                        />
                     </FormControl>
 
                     <FormControl id="email" isInvalid={touched.email && !!errors.email}>
                         <FormLabel color={COLOR_1}>lipu toki ilo</FormLabel>
-                        <Input type="email" {...fieldProps("email")} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="email"
+                            {...fieldProps("email")}
+                        />
                         {touched.email && errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
                     </FormControl>
 
                     <FormControl id="password" isInvalid={touched.password && !!errors.password}>
                         <FormLabel color={COLOR_1}>nimi len</FormLabel>
-                        <Input type="password" {...fieldProps("password")} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="password"
+                            {...fieldProps("password")}
+                        />
                         {touched.password && errors.password && <FormErrorMessage>{errors.password}</FormErrorMessage>}
                     </FormControl>
 
                     <FormControl id="confirmPassword" isInvalid={touched.confirmPassword && !!errors.confirmPassword}>
                         <FormLabel color={COLOR_1}>nimi len a</FormLabel>
-                        <Input type="password" {...fieldProps("confirmPassword")} />
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="password"
+                            {...fieldProps("confirmPassword")}
+                        />
                         {touched.confirmPassword && errors.confirmPassword && (
                             <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
                         )}
@@ -139,9 +192,9 @@ const Register = () => {
                         color={COLOR_4}
                         _hover={{ bg: "teal" }}
                         type="submit"
-                        isDisabled={hasErrors}
+                        isDisabled={hasErrors || usernameTaken || emailTaken}
                     >
-                        pana
+                        o pana
                     </Button>
 
                     <Text fontSize="sm" color={COLOR_1}>

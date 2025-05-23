@@ -149,9 +149,11 @@ const UserProfile = () => {
                             ) : (
                                 <HStack ml={{ base: 0, sm: 4 }} spacing={2} w={{ base: "full", sm: "auto" }}>
                                     <Button
-                                        bg={COLOR_3}
+                                        bg={isFollowing ? "transparent" : COLOR_3}
+                                        border="2px"
+                                        borderColor={isFollowing ? COLOR_3 : "transparent"}
                                         color={textColor}
-                                        _hover={{ bg: COLOR_4, color: "#000B58" }}
+                                        _hover={isFollowing ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }}
                                         size="sm"
                                         borderRadius="md"
                                         px={6}
@@ -163,7 +165,7 @@ const UserProfile = () => {
                                     <Button
                                         bg={COLOR_4}
                                         color={COLOR_1}
-                                        _hover={{ bg: COLOR_3, color: textColor }}
+                                        _hover={{ bg: COLOR_3, color: COLOR_4 }}
                                         size="sm"
                                         borderRadius="md"
                                         px={6}
