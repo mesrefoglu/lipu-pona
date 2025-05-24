@@ -37,6 +37,7 @@ class MyUserSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     username        = serializers.CharField(source='user.username', read_only=True)
+    is_mine         = serializers.SerializerMethodField()
     authorName      = serializers.SerializerMethodField()
     authorPic       = serializers.SerializerMethodField()
     image           = serializers.SerializerMethodField()
@@ -44,9 +45,16 @@ class PostSerializer(serializers.ModelSerializer):
     is_liked        = serializers.SerializerMethodField()
     comment_count   = serializers.SerializerMethodField()
     formatted_date  = serializers.SerializerMethodField()
+    is_edited       = serializers.SerializerMethodField()
 
     def get_authorName(self, obj):
         return obj.user.first_name or obj.user.username
+
+    def get_is_mine(self, obj):
+        request = self.context.get('request', None)
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.user == request.user
 
     def get_authorPic(self, obj):
         return obj.user.profile_picture.url if obj.user.profile_picture else ""
@@ -65,12 +73,15 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comments.count()
 
     def get_formatted_date(self, obj):
-        return obj.created_at.strftime("%b %d %Y %H:%M")
+        return obj.created_at.strftime("%d/%m/%Y %H:%M")
+    
+    def get_is_edited(self, obj):
+        return obj.edited
 
     class Meta:
         model  = Post
         fields = [
-            'id', 'username', 'authorName', 'authorPic',
+            'id', 'username', 'is_mine', 'authorName', 'authorPic',
             'image', 'text', 'created_at', 'formatted_date',
-            'like_count', 'is_liked', 'comment_count',
+            'like_count', 'is_liked', 'comment_count', 'is_edited',
         ]

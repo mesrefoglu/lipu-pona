@@ -17,6 +17,7 @@ from .views import (
     UsernameExists,
     EmailExists,
     CreatePost,
+    EditPost,
 )
 
 urlpatterns = [
@@ -33,5 +34,5 @@ urlpatterns = [
     path('username-exists/', UsernameExists, name='username_exists'),
     path('email-exists/', EmailExists, name='username_exists'),
     path('create-post/', CreatePost, name='create_post'),
-    #path('edit-post/<int:id>', EditPost, name='edit_post'),
+    path('edit-post/<int:id>/', EditPost, name='edit_post'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

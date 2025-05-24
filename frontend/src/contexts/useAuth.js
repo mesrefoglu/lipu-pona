@@ -6,29 +6,31 @@ import { getAuth, loginApi } from "../api/endpoints.js";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [auth, setAuth] = useState(false);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const checkAuth = async () => {
         try {
-            const response = await getAuth();
-            setAuth(response);
-        } catch (error) {
-            console.error("Error checking authentication:", error);
-            setAuth(false);
+            const me = await getAuth();
+            setUser(me);
+        } catch {
+            setUser(null);
         } finally {
             setLoading(false);
         }
     };
 
     const authLogin = async (username, password) => {
-        const response = await loginApi(username, password);
-        if (response.success) {
-            setAuth(true);
+        const resp = await loginApi(username, password);
+        if (resp.success) {
+            const me = await getAuth();
+            setUser(me);
             navigate("/");
+            return me;
         } else {
-            setAuth(false);
+            setUser(null);
+            throw new Error("Login failed");
         }
     };
 
@@ -36,7 +38,7 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []);
 
-    return <AuthContext.Provider value={{ auth, loading, authLogin }}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={{ user, loading, authLogin }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

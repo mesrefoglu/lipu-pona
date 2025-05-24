@@ -1,9 +1,24 @@
-import { Box, Flex, Avatar, Text, Image, HStack, Icon, Divider, Button, Link } from "@chakra-ui/react";
+import {
+    Box,
+    Flex,
+    Avatar,
+    Text,
+    Image,
+    HStack,
+    Icon,
+    Divider,
+    Button,
+    Link,
+    useToast,
+    Spacer,
+} from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaRegHeart, FaRegComment } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit } from "react-icons/fa";
+
+import { useAuth } from "../contexts/useAuth";
 import { likeApi } from "../api/endpoints.js";
-import { API_URL, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { API_URL, BASE_URL, COLOR_3, COLOR_4 } from "../constants/constants.js";
 
 const ActionButton = ({ icon, label, onClick, active }) => (
     <Button
@@ -17,24 +32,26 @@ const ActionButton = ({ icon, label, onClick, active }) => (
         gap={1}
     >
         <Icon as={icon} boxSize={7} />
-        <Text>{label}</Text>
+        {label != null && <Text>{label}</Text>}
     </Button>
 );
 
 const Post = ({
     id,
     username,
+    is_mine,
     authorName,
     authorPic,
     image,
     text,
-    created_at,
+    formatted_date,
     like_count,
     is_liked,
     comment_count,
-    formatted_date,
+    is_edited,
 }) => {
     const navigate = useNavigate();
+    const toast = useToast();
 
     const [liked, setLiked] = useState(is_liked);
     const [likes, setLikes] = useState(like_count);
@@ -51,7 +68,20 @@ const Post = ({
         }
     };
 
+    const handleShare = () => {
+        const url = `${BASE_URL}/post/${id}`;
+        navigator.clipboard.writeText(url).then(() => {
+            toast({
+                description: "Nasin tawa li kama sama!",
+                status: "success",
+                duration: 2000,
+            });
+        });
+    };
+
     const imageSrc = image && (image.startsWith("http") ? image : API_URL + image);
+    const isMine = is_mine;
+    const isEdited = is_edited;
 
     return (
         <Box w="full" mb={6}>
@@ -83,10 +113,16 @@ const Post = ({
                 </Text>
             )}
 
+            {isEdited && (
+                <Text fontSize="xs" color={COLOR_4} mb={2}>
+                    (lipu li ante)
+                </Text>
+            )}
+
             <Divider mb={2} />
 
             <Text fontSize="xs" color={COLOR_4} mb={2}>
-                {formatted_date || created_at}
+                {formatted_date}
             </Text>
 
             <Divider mb={2} />
@@ -94,6 +130,9 @@ const Post = ({
             <HStack spacing={6}>
                 <ActionButton icon={liked ? FaHeart : FaRegHeart} label={likes} onClick={handleLike} />
                 <ActionButton icon={FaRegComment} label={comment_count} />
+                <ActionButton icon={FaShare} onClick={handleShare} />
+                <Spacer />
+                {isMine && <ActionButton icon={FaEdit} onClick={() => navigate(`/post/edit/${id}`)} />}
             </HStack>
         </Box>
     );

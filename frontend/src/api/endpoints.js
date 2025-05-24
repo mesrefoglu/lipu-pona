@@ -51,6 +51,16 @@ export const getAuth = async () => {
     }
 };
 
+export const meApi = async () => {
+    try {
+        const response = await api.get("/me/");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+        throw error;
+    }
+};
+
 export const followApi = async (username) => {
     try {
         const response = await api.post("/follow/", { username: username });
@@ -120,6 +130,16 @@ export const createPostApi = async (imageFile, text) => {
     if (imageFile) formData.append("image", imageFile);
 
     const res = await api.post("/create-post/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+};
+
+export const editPostApi = async (id, text) => {
+    const formData = new FormData();
+    formData.append("text", text);
+
+    const res = await api.post(`/edit-post/${id}/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;

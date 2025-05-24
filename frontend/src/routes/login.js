@@ -27,18 +27,14 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        authLogin(username, password)
-            .then((response) => {
-                if (response.success) {
-                    navigate(`/${username}`);
-                } else {
-                    setError("nimi lipu anu nimi len li suli");
-                }
-            })
-            .catch((error) => {
-                console.error("Login error:", error);
-                setError("nimi lipu anu nimi len li suli");
-            });
+        setError("");
+        try {
+            const me = await authLogin(username, password);
+            console.log(me);
+            navigate(`/${me.username}`);
+        } catch {
+            setError("nimi lipu anu nimi len li suli");
+        }
     };
 
     return (

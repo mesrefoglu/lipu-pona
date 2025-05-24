@@ -1,8 +1,9 @@
 import { Spinner, Center } from "@chakra-ui/react";
-import { useAuth } from "../contexts/useAuth.js";
 import { Navigate } from "react-router-dom";
 
-const PrivateRoute = ({ children }) => {
+import { useAuth } from "../contexts/useAuth.js";
+
+const GuestRoute = ({ children }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -13,7 +14,7 @@ const PrivateRoute = ({ children }) => {
         );
     }
 
-    return user ? children : <Navigate to="/account/login" replace />;
+    return !user ? children : <Navigate to="/" replace />;
 };
 
-export default PrivateRoute;
+export default GuestRoute;

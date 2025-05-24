@@ -94,7 +94,8 @@ def Register(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Authenticated(request):
-    return Response("authenticated")
+    serializer = MyUserSerializer(request.user, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -134,7 +135,7 @@ def GetPost(request, id):
     except Post.DoesNotExist:
         return Response({"error": "Post not found."}, status=404)
 
-    serializer = PostSerializer(post)
+    serializer = PostSerializer(post, context={'request': request})
 
     data = serializer.data
     data['is_liked'] = request.user in post.likes.all()
@@ -149,9 +150,8 @@ def GetPosts(request, username):
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
     
-    posts = user.posts.all().order_by('-created_at')
-
-    serializer = PostSerializer(posts, many=True)
+    posts = user.posts.all().order_by('-id')
+    serializer = PostSerializer(posts, many=True, context={'request': request})
 
     data = []
 
@@ -166,7 +166,7 @@ def GetPosts(request, username):
 def Feed(request):
     following = list(request.user.following.all())
     following.append(request.user)
-    posts_qs = Post.objects.filter(user__in=following).order_by('-created_at')
+    posts_qs = Post.objects.filter(user__in=following).order_by('-id')
     paginator = Paginator(posts_qs, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -231,27 +231,26 @@ def CreatePost(request):
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def EditPost(request):
-#     data = request.data
-#     post_id = data.get('id')
-#     text = data.get('text', None)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def EditPost(request, id):
+    data = request.data
+    text = data.get('text', None)
 
-#     try:
-#         post = Post.objects.get(id=post_id)
-#     except Post.DoesNotExist:
-#         return Response({"error": "Post not found."}, status=404)
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
 
-#     if post.user != request.user:
-#         return Response({"error": "You do not have permission to edit this post."}, status=403)
+    if post.user != request.user:
+        return Response({"error": "You do not have permission to edit this post."}, status=403)
 
-#     if text is not None:
-#         post.text = text
+    if text is not None:
+        post.text = text
 
-#     post.edited = True
-#     post.save()
+    post.edited = True
+    post.save()
 
-#     serializer = PostSerializer(post)
+    serializer = PostSerializer(post)
 
-#     return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)

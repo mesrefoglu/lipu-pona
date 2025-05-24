@@ -10,13 +10,15 @@ import {
     FormErrorMessage,
     Text,
     Link,
+    Alert,
+    AlertIcon,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
 import { useAuth } from "../contexts/useAuth.js";
-import { COLOR_1, COLOR_2, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,7 +28,7 @@ const getErrors = (fields, usernameTaken, emailTaken) => ({
     username: !fields.username
         ? "nimi lipu li wile."
         : !usernameRegex.test(fields.username)
-        ? "nimi ilo li wile lon 3-20 sitelen. sitelen ni li ken jo e sitelen nimi en sitelen nanpa."
+        ? "nimi ilo li wile lon 3-20 sitelen."
         : usernameTaken
         ? "nimi lipu ni li lon. o ante."
         : "",
@@ -39,14 +41,14 @@ const getErrors = (fields, usernameTaken, emailTaken) => ({
         : "",
     password: !fields.password
         ? "nimi len li wile."
-        : passwordRegex.test(fields.password)
-        ? ""
-        : "nimi len sina li wile lon suli 8 sitelen. nimi li wile jo e sitelen nimi en sitelen nanpa.",
+        : !passwordRegex.test(fields.password)
+        ? "nimi len sina li wile lon suli 8 sitelen."
+        : "",
     confirmPassword: !fields.confirmPassword
         ? "o pana e nimi len a."
-        : fields.confirmPassword === fields.password
-        ? ""
-        : "nimi len li sama ala.",
+        : fields.confirmPassword !== fields.password
+        ? "nimi len li sama ala."
+        : "",
 });
 
 const Register = () => {
@@ -57,16 +59,10 @@ const Register = () => {
         password: "",
         confirmPassword: "",
     });
-
-    const [touched, setTouched] = useState({
-        username: false,
-        email: false,
-        password: false,
-        confirmPassword: false,
-    });
-
+    const [touched, setTouched] = useState({});
     const [usernameTaken, setUsernameTaken] = useState(false);
     const [emailTaken, setEmailTaken] = useState(false);
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
     const { authLogin } = useAuth();
@@ -83,42 +79,29 @@ const Register = () => {
 
     const handleBlur = async (field) => {
         setTouched((t) => ({ ...t, [field]: true }));
-
         if (field === "username" && usernameRegex.test(values.username)) {
-            const taken = await checkUsernameApi(values.username);
-            setUsernameTaken(taken);
+            setUsernameTaken(await checkUsernameApi(values.username));
         }
-
         if (field === "email" && emailRegex.test(values.email)) {
-            const taken = await checkEmailApi(values.email);
-            setEmailTaken(taken);
+            setEmailTaken(await checkEmailApi(values.email));
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setTouched({
-            username: true,
-            email: true,
-            password: true,
-            confirmPassword: true,
-        });
+        setTouched({ username: true, email: true, password: true, confirmPassword: true });
+        setError("");
+
         if (hasErrors) return;
-
-        const { username, name, email, password } = values;
-        const data = await registerApi(username, name, email, password);
-
-        if (data.success) {
-            await authLogin(username, password);
-            navigate("/");
+        try {
+            const { username, name, email, password } = values;
+            await registerApi(username, name, email, password);
+            const me = await authLogin(username, password);
+            navigate(`/${me.username}`);
+        } catch {
+            setError("pilin ike: o pali sin.");
         }
     };
-
-    const fieldProps = (id) => ({
-        value: values[id],
-        onChange: handleChange(id),
-        onBlur: () => handleBlur(id),
-    });
 
     return (
         <Flex minH="85vh" align="center" justify="center" px={4}>
@@ -128,13 +111,24 @@ const Register = () => {
                         o pana e lipu sin
                     </Heading>
 
+                    {error && (
+                        <Alert status="error" rounded="md" w="full">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
+
                     <FormControl id="username" isInvalid={touched.username && !!errors.username}>
                         <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="text"
-                            {...fieldProps("username")}
+                            {...{
+                                value: values.username,
+                                onChange: handleChange("username"),
+                                onBlur: () => handleBlur("username"),
+                            }}
                         />
                         {touched.username && errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
                     </FormControl>
@@ -145,7 +139,7 @@ const Register = () => {
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="text"
-                            {...fieldProps("name")}
+                            {...{ value: values.name, onChange: handleChange("name") }}
                         />
                     </FormControl>
 
@@ -155,7 +149,11 @@ const Register = () => {
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="email"
-                            {...fieldProps("email")}
+                            {...{
+                                value: values.email,
+                                onChange: handleChange("email"),
+                                onBlur: () => handleBlur("email"),
+                            }}
                         />
                         {touched.email && errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
                     </FormControl>
@@ -166,7 +164,7 @@ const Register = () => {
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="password"
-                            {...fieldProps("password")}
+                            {...{ value: values.password, onChange: handleChange("password") }}
                         />
                         {touched.password && errors.password && <FormErrorMessage>{errors.password}</FormErrorMessage>}
                     </FormControl>
@@ -177,7 +175,10 @@ const Register = () => {
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="password"
-                            {...fieldProps("confirmPassword")}
+                            {...{
+                                value: values.confirmPassword,
+                                onChange: handleChange("confirmPassword"),
+                            }}
                         />
                         {touched.confirmPassword && errors.confirmPassword && (
                             <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
@@ -198,7 +199,7 @@ const Register = () => {
                     </Button>
 
                     <Text fontSize="sm" color={COLOR_1}>
-                        sina kulupu ni anu seme?{" "}
+                        sina sin anu seme?{" "}
                         <Link as={RouterLink} to="/account/login" color="blue.500" fontWeight="semibold">
                             o kama lon insa
                         </Link>

@@ -13,6 +13,7 @@ import {
     AlertDescription,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import { followApi, getUserApi, getPostsApi } from "../api/endpoints.js";
 import { API_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
@@ -22,13 +23,7 @@ const UserProfile = () => {
     const textColor = COLOR_4;
     const secondaryTextColor = "gray.300";
 
-    const getUsernameFromUrl = () => {
-        const parts = window.location.href.split("/");
-        if (parts[parts.length - 1] === "") parts.pop();
-        return parts[parts.length - 1];
-    };
-
-    const [username] = useState(getUsernameFromUrl());
+    const { username } = useParams();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isSelf, setIsSelf] = useState(false);
@@ -161,17 +156,6 @@ const UserProfile = () => {
                                         onClick={handleFollowButton}
                                     >
                                         {isFollowing ? "o kute ala" : "o kute"}
-                                    </Button>
-                                    <Button
-                                        bg={COLOR_4}
-                                        color={COLOR_1}
-                                        _hover={{ bg: COLOR_3, color: COLOR_4 }}
-                                        size="sm"
-                                        borderRadius="md"
-                                        px={6}
-                                        w={{ base: "full", sm: "auto" }}
-                                    >
-                                        o toki
                                     </Button>
                                 </HStack>
                             )}

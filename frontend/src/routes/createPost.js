@@ -4,19 +4,18 @@ import {
     Heading,
     FormControl,
     FormLabel,
-    Input,
-    Textarea,
     Button,
-    VStack,
+    Textarea,
     Text,
     Alert,
     AlertIcon,
     Image,
     IconButton,
+    VStack,
 } from "@chakra-ui/react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiX } from "react-icons/fi";
+import { FiX, FiUpload } from "react-icons/fi";
 
 import { createPostApi } from "../api/endpoints.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
@@ -32,7 +31,7 @@ const CreatePost = () => {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-    const fileInputRef = useRef(null);
+    const fileInputRef = useRef();
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -40,24 +39,25 @@ const CreatePost = () => {
 
         if (!VALID_TYPES.includes(file.type)) {
             setError("sitelen musi li ike! o pana e [.jpg] anu [.png].");
-            setImageFile(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
+            clearFile();
             return;
         }
-
         if (file.size > MAX_BYTES) {
             setError("sike sitelen li suli sama 5 MB taso.");
-            setImageFile(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        } else {
-            setError("");
-            setImageFile(file);
+            clearFile();
+            return;
         }
+        setError("");
+        setImageFile(file);
+    };
+
+    const clearFile = () => {
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleTextChange = (e) => {
-        const val = e.target.value.slice(0, MAX_CHARS);
-        setText(val);
+        setText(e.target.value.slice(0, MAX_CHARS));
     };
 
     const handleSubmit = async (e) => {
@@ -66,10 +66,9 @@ const CreatePost = () => {
             setError("sitelen nimi li wile.");
             return;
         }
-
         try {
             setLoading(true);
-            let res = await createPostApi(imageFile, text.trim());
+            const res = await createPostApi(imageFile, text.trim());
             navigate("/post/" + res.id);
         } catch {
             setError("pilin ike: post li ken ala kama.");
@@ -94,32 +93,34 @@ const CreatePost = () => {
                     )}
 
                     <FormControl id="image">
-                        <FormLabel color={COLOR_1} pointerEvents="none">
-                            sitelen (≤ 5 MB; png/jpg)
-                        </FormLabel>
-                        <Input
-                            ref={fileInputRef}
+                        <FormLabel color={COLOR_1}>sitelen (≤ 5 MB; png/jpg)</FormLabel>
+                        <input
                             type="file"
                             accept=".png,.jpg,.jpeg"
                             onChange={handleImageChange}
-                            bg={COLOR_1}
-                            color={COLOR_4}
-                            border="1px solid"
-                            borderColor={COLOR_4}
-                            p={1}
+                            ref={fileInputRef}
+                            style={{ display: "none" }}
                         />
+                        <Button
+                            leftIcon={<FiUpload />}
+                            onClick={() => fileInputRef.current.click()}
+                            bg={COLOR_3}
+                            color={COLOR_4}
+                            _hover={{ bg: COLOR_1 }}
+                        >
+                            {imageFile ? "o ante e sitelen ni" : "o pana e sitelen"}
+                        </Button>
+
                         {imageFile && (
                             <Box position="relative" w="full" mt={2}>
                                 <Image
                                     src={URL.createObjectURL(imageFile)}
                                     alt="preview"
                                     borderRadius="md"
-                                    maxH="250px"
                                     objectFit="cover"
                                     w="full"
                                 />
                                 <IconButton
-                                    aria-label="remove"
                                     icon={<FiX />}
                                     size="sm"
                                     position="absolute"
@@ -127,21 +128,18 @@ const CreatePost = () => {
                                     right={2}
                                     bg="rgba(0,0,0,0.6)"
                                     color="white"
-                                    _hover={{ bg: "red.600" }}
-                                    onClick={() => {
-                                        setImageFile(null);
-                                        if (fileInputRef.current) fileInputRef.current.value = "";
-                                    }}
+                                    onClick={clearFile}
                                 />
+                                <Text mt={2} fontSize="sm" color={COLOR_1}>
+                                    {imageFile.name}
+                                </Text>
                             </Box>
                         )}
                     </FormControl>
 
                     <FormControl id="text" isRequired>
-                        <FormLabel color={COLOR_1} pointerEvents="none">
-                            sitelen nimi (≤ 1000)
-                        </FormLabel>
-                        <Box position="relative">
+                        <FormLabel color={COLOR_1}>sitelen nimi (≤ 1000)</FormLabel>
+                        <Box position="relative" w="full">
                             <Textarea
                                 value={text}
                                 onChange={handleTextChange}
@@ -149,14 +147,13 @@ const CreatePost = () => {
                                 h="150px"
                                 resize="none"
                                 overflowY="auto"
-                                bg={COLOR_1}
-                                color={COLOR_4}
-                                borderColor={COLOR_4}
+                                borderColor="gray.400"
+                                color={COLOR_1}
+                                _hover={{ borderColor: COLOR_3 }}
                             />
                             <Text
-                                zIndex={1}
                                 fontSize="xs"
-                                color={text.length === MAX_CHARS ? "red.500" : COLOR_4}
+                                color={text.length === MAX_CHARS ? "red.500" : COLOR_1}
                                 position="absolute"
                                 bottom={2}
                                 right={3}

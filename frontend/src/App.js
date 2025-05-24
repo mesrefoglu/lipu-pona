@@ -5,14 +5,16 @@ import { ChakraProvider } from "@chakra-ui/react";
 
 import Layout from "./components/layout.js";
 import PrivateRoute from "./components/privateRoute.js";
+import GuestRoute from "./components/guestRoute.js";
 import { AuthProvider } from "./contexts/useAuth.js";
 
 import Home from "./routes/home.js";
 import Login from "./routes/login.js";
 import UserProfile from "./routes/userProfile.js";
+import SinglePost from "./routes/singlePost.js";
 import Register from "./routes/register.js";
 import CreatePost from "./routes/createPost.js";
-import SinglePost from "./routes/singlePost.js";
+import EditPost from "./routes/editPost.js";
 
 function App() {
     return (
@@ -61,10 +63,22 @@ function App() {
                             }
                         />
                         <Route
+                            path="/post/edit/:id"
+                            element={
+                                <Layout>
+                                    <PrivateRoute>
+                                        <EditPost />
+                                    </PrivateRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
                             path="/account/login"
                             element={
                                 <Layout>
-                                    <Login />
+                                    <GuestRoute>
+                                        <Login />
+                                    </GuestRoute>
                                 </Layout>
                             }
                         />
@@ -72,7 +86,9 @@ function App() {
                             path="/account/register"
                             element={
                                 <Layout>
-                                    <Register />
+                                    <GuestRoute>
+                                        <Register />
+                                    </GuestRoute>
                                 </Layout>
                             }
                         />
