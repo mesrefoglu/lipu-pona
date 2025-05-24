@@ -42,7 +42,7 @@ const Login = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} onSubmit={handleSubmit} w="full">
                     <Heading size="lg" color={COLOR_1} textAlign="center">
-                        o kama lon insa
+                        kama lon insa
                     </Heading>
 
                     {error && (
