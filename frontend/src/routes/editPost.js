@@ -94,7 +94,6 @@ const EditPost = () => {
                             <Textarea
                                 value={text}
                                 onChange={handleTextChange}
-                                placeholder="o toki..."
                                 h="150px"
                                 resize="none"
                                 overflowY="auto"
