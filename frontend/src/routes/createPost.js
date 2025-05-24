@@ -15,14 +15,13 @@ import {
 } from "@chakra-ui/react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import imageCompression from "browser-image-compression";
 import { FiX, FiUpload } from "react-icons/fi";
 
 import { createPostApi } from "../api/endpoints.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 
 const MAX_CHARS = 1000;
-const MAX_BYTES = 5 * 1024 * 1024;
-const VALID_TYPES = ["image/jpeg", "image/png"];
 
 const CreatePost = () => {
     const [text, setText] = useState("");
@@ -33,22 +32,29 @@ const CreatePost = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef();
 
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (!VALID_TYPES.includes(file.type)) {
-            setError("sitelen musi li ike! o pana e [.jpg] anu [.png].");
-            clearFile();
-            return;
+        try {
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+                fileType: "image/jpeg",
+            };
+
+            const compressedBlob = await imageCompression(file, options);
+
+            const jpgFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: "image/jpeg",
+            });
+
+            setImageFile(jpgFile);
+            setError("");
+        } catch {
+            setError("sitelen musi li ike! compression failed.");
         }
-        if (file.size > MAX_BYTES) {
-            setError("sike sitelen li suli sama 5 MB taso.");
-            clearFile();
-            return;
-        }
-        setError("");
-        setImageFile(file);
     };
 
     const clearFile = () => {
@@ -93,10 +99,10 @@ const CreatePost = () => {
                     )}
 
                     <FormControl id="image">
-                        <FormLabel color={COLOR_1}>sitelen (≤ 5 MB; png/jpg)</FormLabel>
+                        <FormLabel color={COLOR_1}>sitelen</FormLabel>
                         <input
                             type="file"
-                            accept=".png,.jpg,.jpeg"
+                            accept=".jpg, .jpeg, .png, .webp, .bmp"
                             onChange={handleImageChange}
                             ref={fileInputRef}
                             style={{ display: "none" }}
@@ -106,7 +112,7 @@ const CreatePost = () => {
                             onClick={() => fileInputRef.current.click()}
                             bg={COLOR_3}
                             color={COLOR_4}
-                            _hover={{ bg: COLOR_1 }}
+                            _hover={{ bg: "teal" }}
                         >
                             {imageFile ? "o ante e sitelen ni" : "o pana e sitelen"}
                         </Button>
@@ -138,12 +144,11 @@ const CreatePost = () => {
                     </FormControl>
 
                     <FormControl id="text" isRequired>
-                        <FormLabel color={COLOR_1}>sitelen nimi (≤ 1000)</FormLabel>
+                        <FormLabel color={COLOR_1}>sitelen nimi</FormLabel>
                         <Box position="relative" w="full">
                             <Textarea
                                 value={text}
                                 onChange={handleTextChange}
-                                placeholder="o toki..."
                                 h="150px"
                                 resize="none"
                                 overflowY="auto"
