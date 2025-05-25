@@ -16,9 +16,9 @@ import {
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 
-import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
-import { useAuth } from "../contexts/useAuth.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { useAuth } from "../contexts/useAuth.js";
+import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
 
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

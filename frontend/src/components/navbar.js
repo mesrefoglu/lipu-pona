@@ -2,8 +2,8 @@ import { Text, Flex, HStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
 
-import { useAuth } from "../contexts/useAuth.js";
 import { COLOR_1, COLOR_3 } from "../constants/constants.js";
+import { useAuth } from "../contexts/useAuth.js";
 
 const Navbar = () => {
     const navigate = useNavigate();

@@ -30,7 +30,6 @@ const Login = () => {
         setError("");
         try {
             const me = await authLogin(username, password);
-            console.log(me);
             navigate(`/${me.username}`);
         } catch {
             setError("nimi lipu anu nimi len li suli");

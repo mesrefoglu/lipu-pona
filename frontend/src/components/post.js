@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     Box,
     Flex,
@@ -12,13 +13,12 @@ import {
     useToast,
     Spacer,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit, FaTrash } from "react-icons/fa";
 
-import { useAuth } from "../contexts/useAuth";
-import { likeApi } from "../api/endpoints.js";
-import { API_URL, BASE_URL, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { API_URL, BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { likeApi, deletePostApi } from "../api/endpoints.js";
+import ConfirmDialog from "./ConfirmDialogue.js";
 
 const ActionButton = ({ icon, label, onClick, active }) => (
     <Button
@@ -49,12 +49,15 @@ const Post = ({
     is_liked,
     comment_count,
     is_edited,
+    onDelete,
 }) => {
     const navigate = useNavigate();
     const toast = useToast();
 
     const [liked, setLiked] = useState(is_liked);
     const [likes, setLikes] = useState(like_count);
+    const [, setDeleting] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     const handleLike = async () => {
         const next = !liked;
@@ -79,62 +82,98 @@ const Post = ({
         });
     };
 
+    const handleDelete = () => setConfirmOpen(true);
+    const onConfirmDelete = async () => {
+        setDeleting(true);
+        try {
+            await deletePostApi(id);
+            setConfirmOpen(false);
+            toast({ description: "sitelen li pakala!", status: "success", duration: 2000 });
+            if (onDelete) {
+                onDelete(id);
+            } else {
+                navigate(`/${username}`);
+            }
+        } catch {
+            toast({ description: "pilin ike: post li ken ala pakala", status: "error", duration: 2000 });
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const imageSrc = image && (image.startsWith("http") ? image : API_URL + image);
-    const isMine = is_mine;
-    const isEdited = is_edited;
 
     return (
-        <Box w="full" mb={6}>
-            <Flex align="center" mb={3}>
-                <Flex onClick={() => navigate(`/${username}`)} cursor="pointer">
-                    <Avatar size="md" src={authorPic ? API_URL + authorPic : undefined} />
-                    <HStack ml={3} spacing={2}>
-                        {authorName && (
-                            <Text fontWeight="bold" color={COLOR_4}>
-                                {authorName}
+        <>
+            <Box w="full" mb={6}>
+                <Flex align="center" mb={3}>
+                    <Flex onClick={() => navigate(`/${username}`)} cursor="pointer">
+                        <Avatar size="md" src={authorPic ? API_URL + authorPic : undefined} />
+                        <HStack ml={3} spacing={2}>
+                            {authorName && (
+                                <Text fontWeight="bold" color={COLOR_4}>
+                                    {authorName}
+                                </Text>
+                            )}
+                            <Text fontSize="sm" color={COLOR_4}>
+                                @{username}
                             </Text>
-                        )}
-                        <Text fontSize="sm" color={COLOR_4}>
-                            @{username}
-                        </Text>
-                    </HStack>
+                        </HStack>
+                    </Flex>
                 </Flex>
-            </Flex>
 
-            {imageSrc && (
-                <Link href={imageSrc} isExternal>
-                    <Image src={imageSrc} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
-                </Link>
-            )}
+                {imageSrc && (
+                    <Link href={imageSrc} isExternal>
+                        <Image src={imageSrc} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
+                    </Link>
+                )}
 
-            {text && (
-                <Text mb={3} whiteSpace="pre-wrap" color={COLOR_4}>
-                    {text}
-                </Text>
-            )}
+                {text && (
+                    <Text mb={3} whiteSpace="pre-wrap" color={COLOR_4}>
+                        {text}
+                    </Text>
+                )}
 
-            {isEdited && (
+                {is_edited && (
+                    <Text fontSize="xs" color={COLOR_4} mb={2}>
+                        (lipu li ante)
+                    </Text>
+                )}
+
+                <Divider mb={2} />
                 <Text fontSize="xs" color={COLOR_4} mb={2}>
-                    (lipu li ante)
+                    {formatted_date}
                 </Text>
-            )}
+                <Divider mb={2} />
 
-            <Divider mb={2} />
+                <HStack spacing={6}>
+                    <ActionButton icon={liked ? FaHeart : FaRegHeart} label={likes} onClick={handleLike} />
+                    <ActionButton icon={FaRegComment} label={comment_count} onClick={() => {}} />
+                    <ActionButton icon={FaShare} onClick={handleShare} />
+                    <Spacer />
+                    {is_mine && (
+                        <>
+                            <ActionButton icon={FaEdit} onClick={() => navigate(`/post/edit/${id}`)} />
+                            <ActionButton icon={FaTrash} onClick={handleDelete} active={false} />
+                        </>
+                    )}
+                </HStack>
+            </Box>
 
-            <Text fontSize="xs" color={COLOR_4} mb={2}>
-                {formatted_date}
-            </Text>
-
-            <Divider mb={2} />
-
-            <HStack spacing={6}>
-                <ActionButton icon={liked ? FaHeart : FaRegHeart} label={likes} onClick={handleLike} />
-                <ActionButton icon={FaRegComment} label={comment_count} />
-                <ActionButton icon={FaShare} onClick={handleShare} />
-                <Spacer />
-                {isMine && <ActionButton icon={FaEdit} onClick={() => navigate(`/post/edit/${id}`)} />}
-            </HStack>
-        </Box>
+            <ConfirmDialog
+                isOpen={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={onConfirmDelete}
+                title="o weka ala weka e pana ni anu?"
+                description="sina ken ala e tawa monsi."
+                confirmText="o weka"
+                cancelText="ala"
+                headerTextColor={COLOR_1}
+                bodyTextColor={COLOR_1}
+                cancelButtonColorScheme="gray"
+                confirmButtonColorScheme="red"
+            />
+        </>
     );
 };
 

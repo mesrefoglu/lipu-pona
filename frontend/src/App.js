@@ -3,18 +3,18 @@ import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 
-import Layout from "./components/layout.js";
-import PrivateRoute from "./components/privateRoute.js";
-import GuestRoute from "./components/guestRoute.js";
+import Layout from "./components/Layout.js";
+import PrivateRoute from "./components/PrivateRoute.js";
+import GuestRoute from "./components/GuestRoute.js";
 import { AuthProvider } from "./contexts/useAuth.js";
 
-import Home from "./routes/home.js";
-import Login from "./routes/login.js";
-import UserProfile from "./routes/userProfile.js";
-import SinglePost from "./routes/singlePost.js";
-import Register from "./routes/register.js";
-import CreatePost from "./routes/createPost.js";
-import EditPost from "./routes/editPost.js";
+import Home from "./routes/Home.js";
+import Login from "./routes/Login.js";
+import UserProfile from "./routes/UserProfile.js";
+import SinglePost from "./routes/SinglePost.js";
+import Register from "./routes/Register.js";
+import CreatePost from "./routes/CreatePost.js";
+import EditPost from "./routes/EditPost.js";
 
 function App() {
     return (

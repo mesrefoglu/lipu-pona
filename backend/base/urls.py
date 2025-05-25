@@ -8,6 +8,7 @@ from .views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     Register,
+    Logout,
     Authenticated,
     ToggleFollow,
     GetPost,
@@ -18,6 +19,7 @@ from .views import (
     EmailExists,
     CreatePost,
     EditPost,
+    DeletePost,
 )
 
 urlpatterns = [
@@ -25,6 +27,7 @@ urlpatterns = [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('register/', Register, name='register'),
+    path('logout/', Logout, name='logout'),
     path('authenticated/', Authenticated, name='authenticated'),
     path('follow/', ToggleFollow, name='follow'),
     path('post/<int:id>/', GetPost, name='get_post'),
@@ -35,4 +38,5 @@ urlpatterns = [
     path('email-exists/', EmailExists, name='username_exists'),
     path('create-post/', CreatePost, name='create_post'),
     path('edit-post/<int:id>/', EditPost, name='edit_post'),
+    path('delete-post/<int:id>/', DeletePost, name='delete_post'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

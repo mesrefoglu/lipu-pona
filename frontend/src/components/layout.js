@@ -1,6 +1,7 @@
 import { Box, VStack } from "@chakra-ui/react";
-import Navbar from "./navbar";
+
 import { COLOR_1 } from "../constants/constants.js";
+import Navbar from "./Navbar.js";
 
 const Layout = ({ children }) => {
     return (

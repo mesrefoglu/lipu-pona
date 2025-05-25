@@ -15,11 +15,14 @@ import {
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { followApi, getUserApi, getPostsApi } from "../api/endpoints.js";
 import { API_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
-import Post from "../components/post.js";
+import { useAuth } from "../contexts/useAuth.js";
+import { followApi, getUserApi, getPostsApi } from "../api/endpoints.js";
+import Post from "../components/Post.js";
+import ConfirmDialog from "../components/ConfirmDialogue.js";
 
 const UserProfile = () => {
+    const { logout } = useAuth();
     const textColor = COLOR_4;
     const secondaryTextColor = "gray.300";
 
@@ -42,6 +45,8 @@ const UserProfile = () => {
         private: false,
     });
 
+    const [confirmOpen, setConfirmOpen] = useState(false);
+
     const handleFollowButton = async () => {
         const data = await followApi(username);
         if (data) {
@@ -51,6 +56,11 @@ const UserProfile = () => {
                 follower_count: isFollowing ? prev.follower_count - 1 : prev.follower_count + 1,
             }));
         }
+    };
+
+    const onConfirmLogout = () => {
+        setConfirmOpen(false);
+        logout();
     };
 
     useEffect(() => {
@@ -107,97 +117,134 @@ const UserProfile = () => {
         );
 
     return (
-        <Container maxW="container.md" py={8}>
-            <Box borderRadius="md" p={4}>
-                <Flex direction={{ base: "column", md: "row" }} alignItems="center" mb={6}>
-                    <Box mr={{ base: 0, md: 10 }} mb={{ base: 6, md: 0 }}>
-                        <Avatar
-                            size="2xl"
-                            src={profile.profile_picture ? API_URL + profile.profile_picture : undefined}
-                        />
-                    </Box>
+        <>
+            <Container maxW="container.md" py={8}>
+                <Box borderRadius="md" p={4}>
+                    <Flex direction={{ base: "column", md: "row" }} alignItems="center" mb={6}>
+                        <Box mr={{ base: 0, md: 10 }} mb={{ base: 6, md: 0 }}>
+                            <Avatar
+                                size="2xl"
+                                src={profile.profile_picture ? API_URL + profile.profile_picture : undefined}
+                            />
+                        </Box>
 
-                    <VStack align="flex-start" flex={1} spacing={4}>
-                        <Flex
-                            direction={{ base: "column", sm: "row" }}
-                            alignItems={{ base: "flex-start", sm: "center" }}
-                            w="full"
-                            mb={2}
-                        >
-                            <Text fontSize="xl" fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
-                                @{profile.username}
-                            </Text>
+                        <VStack align="flex-start" flex={1} spacing={4}>
+                            <Flex
+                                direction={{ base: "column", sm: "row" }}
+                                alignItems={{ base: "flex-start", sm: "center" }}
+                                w="full"
+                                mb={2}
+                            >
+                                <Text fontSize="xl" fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
+                                    @{profile.username}
+                                </Text>
 
-                            {isSelf ? (
-                                <Button
-                                    bg={COLOR_4}
-                                    color={COLOR_1}
-                                    _hover={{ bg: COLOR_3, color: textColor }}
-                                    size="sm"
-                                    borderRadius="md"
-                                    px={6}
-                                    ml={{ base: 0, sm: 4 }}
-                                    w={{ base: "full", sm: "auto" }}
-                                >
-                                    o ante e lipu mi
-                                </Button>
-                            ) : (
-                                <HStack ml={{ base: 0, sm: 4 }} spacing={2} w={{ base: "full", sm: "auto" }}>
+                                {isSelf ? (
+                                    <HStack ml={{ base: 0, sm: 4 }} spacing={2} w={{ base: "full", sm: "auto" }}>
+                                        <Button
+                                            bg={COLOR_4}
+                                            color={COLOR_1}
+                                            _hover={{ bg: COLOR_3, color: textColor }}
+                                            size="sm"
+                                            borderRadius="md"
+                                            px={6}
+                                        >
+                                            o ante e lipu mi
+                                        </Button>
+                                        <Button
+                                            bg={"transparent"}
+                                            border={"2px"}
+                                            borderColor={"red.500"}
+                                            color={textColor}
+                                            _hover={{ bg: "red.500" }}
+                                            size="sm"
+                                            px={6}
+                                            ml={{ base: 0, sm: 4 }}
+                                            w={{ base: "full", sm: "auto" }}
+                                            onClick={() => {
+                                                setConfirmOpen(true);
+                                            }}
+                                        >
+                                            o tawa weka tan insa
+                                        </Button>
+                                    </HStack>
+                                ) : (
                                     <Button
                                         bg={isFollowing ? "transparent" : COLOR_3}
+                                        ml={{ base: 0, sm: 4 }}
+                                        w={{ base: "full", sm: "auto" }}
                                         border="2px"
                                         borderColor={isFollowing ? COLOR_3 : "transparent"}
                                         color={textColor}
                                         _hover={isFollowing ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }}
                                         size="sm"
-                                        borderRadius="md"
                                         px={6}
-                                        w={{ base: "full", sm: "auto" }}
                                         onClick={handleFollowButton}
                                     >
                                         {isFollowing ? "o kute ala" : "o kute"}
                                     </Button>
+                                )}
+                            </Flex>
+
+                            <HStack spacing={6} py={2}>
+                                <HStack>
+                                    <Text fontWeight="bold" color={textColor}>
+                                        {profile.post_count || 0}
+                                    </Text>
+                                    <Text color={secondaryTextColor}>pana</Text>
                                 </HStack>
-                            )}
-                        </Flex>
+                                <HStack>
+                                    <Text fontWeight="bold" color={textColor}>
+                                        {profile.follower_count}
+                                    </Text>
+                                    <Text color={secondaryTextColor}>jan kute</Text>
+                                </HStack>
+                                <HStack>
+                                    <Text fontWeight="bold" color={textColor}>
+                                        {profile.following_count}
+                                    </Text>
+                                    <Text color={secondaryTextColor}>jan li mi kute</Text>
+                                </HStack>
+                            </HStack>
 
-                        <HStack spacing={6} py={2}>
-                            <HStack>
-                                <Text fontWeight="bold" color={textColor}>
-                                    {profile.post_count || 0}
+                            <VStack align="flex-start" spacing={1}>
+                                <Text fontWeight="medium" color={textColor}>
+                                    {profile.first_name}
                                 </Text>
-                                <Text color={secondaryTextColor}>pana</Text>
-                            </HStack>
-                            <HStack>
-                                <Text fontWeight="bold" color={textColor}>
-                                    {profile.follower_count}
-                                </Text>
-                                <Text color={secondaryTextColor}>jan kute</Text>
-                            </HStack>
-                            <HStack>
-                                <Text fontWeight="bold" color={textColor}>
-                                    {profile.following_count}
-                                </Text>
-                                <Text color={secondaryTextColor}>jan li mi kute</Text>
-                            </HStack>
-                        </HStack>
-
-                        <VStack align="flex-start" spacing={1}>
-                            <Text fontWeight="medium" color={textColor}>
-                                {profile.first_name}
-                            </Text>
-                            <Text color={textColor}>{profile.bio}</Text>
+                                <Text color={textColor}>{profile.bio}</Text>
+                            </VStack>
                         </VStack>
-                    </VStack>
-                </Flex>
+                    </Flex>
 
-                <VStack spacing={6} mt={8}>
-                    {posts.map((p) => (
-                        <Post key={p.id} {...p} authorName={profile.first_name} authorPic={profile.profile_picture} />
-                    ))}
-                </VStack>
-            </Box>
-        </Container>
+                    <VStack spacing={6} mt={8}>
+                        {posts.map((post) => (
+                            <Post
+                                key={post.id}
+                                {...post}
+                                authorName={profile.first_name}
+                                authorPic={profile.profile_picture}
+                                onDelete={(deletedId) =>
+                                    setPosts((prev) => prev.filter((post) => post.id !== deletedId))
+                                }
+                            />
+                        ))}
+                    </VStack>
+                </Box>
+            </Container>
+            <ConfirmDialog
+                isOpen={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={onConfirmLogout}
+                title="o tawa weka tan insa anu seme?"
+                description=""
+                confirmText="o tawa"
+                cancelText="ala"
+                headerTextColor={COLOR_1}
+                bodyTextColor={COLOR_1}
+                cancelButtonColorScheme="gray"
+                confirmButtonColorScheme="red"
+            />
+        </>
     );
 };
 

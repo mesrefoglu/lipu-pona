@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { API_URL } from "../constants/constants.js";
 
 const BASE_URL = API_URL;
@@ -23,7 +24,7 @@ export const loginApi = async (username, password) => {
         const response = await api.post("/token/", { username, password });
         return response.data;
     } catch (error) {
-        console.log("Error during login:", error);
+        console.warn("Error during login:", error);
         return { success: false };
     }
 };
@@ -36,9 +37,14 @@ export const registerApi = async (username, name, email, password) => {
         const response = await api.post("/register/", { username, email, first_name: name, last_name: "", password });
         return response.data;
     } catch (error) {
-        console.log("Error during registration:", error);
+        console.warn("Error during registration:", error);
         return { success: false };
     }
+};
+
+export const logoutApi = async () => {
+    await api.post("/logout/");
+    return { success: true };
 };
 
 export const getAuth = async () => {
@@ -143,4 +149,14 @@ export const editPostApi = async (id, text) => {
         headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
+};
+
+export const deletePostApi = async (id) => {
+    try {
+        await api.delete(`/delete-post/${id}/`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting post:", error);
+        throw error;
+    }
 };

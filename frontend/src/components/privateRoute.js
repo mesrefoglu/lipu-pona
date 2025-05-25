@@ -1,6 +1,7 @@
 import { Spinner, Center } from "@chakra-ui/react";
-import { useAuth } from "../contexts/useAuth.js";
 import { Navigate } from "react-router-dom";
+
+import { useAuth } from "../contexts/useAuth.js";
 
 const PrivateRoute = ({ children }) => {
     const { user, loading } = useAuth();

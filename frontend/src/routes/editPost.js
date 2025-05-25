@@ -16,8 +16,8 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getPostApi, editPostApi } from "../api/endpoints.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { getPostApi, editPostApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 1000;
 

@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Box, VStack, Spinner, Alert, AlertIcon, Text } from "@chakra-ui/react";
 
-import { getPostApi } from "../api/endpoints.js";
-import Post from "../components/post.js";
 import { COLOR_1 } from "../constants/constants.js";
+import { getPostApi } from "../api/endpoints.js";
+import Post from "../components/Post.js";
 
 const SinglePost = () => {
     const { id } = useParams();

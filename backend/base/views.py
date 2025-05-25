@@ -90,6 +90,32 @@ def Register(request):
         return Response({"success": True}, status=status.HTTP_201_CREATED)
     except Exception as exc:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def Logout(request):
+    resp = Response({"success": True})
+    resp.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+    resp.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+    return resp
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -254,3 +280,17 @@ def EditPost(request, id):
     serializer = PostSerializer(post)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def DeletePost(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if post.user != request.user:
+        return Response({"error": "You do not have permission to delete this post."}, status=status.HTTP_403_FORBIDDEN)
+
+    post.delete()
+    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)

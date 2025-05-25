@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, VStack, Spinner } from "@chakra-ui/react";
 
 import { feedApi } from "../api/endpoints.js";
-import Post from "../components/post.js";
+import Post from "../components/Post.js";
 
 const Home = () => {
     const [posts, setPosts] = useState([]);
@@ -46,7 +46,11 @@ const Home = () => {
                             <Post {...post} />
                         </Box>
                     ) : (
-                        <Post key={post.id} {...post} />
+                        <Post
+                            key={post.id}
+                            {...post}
+                            onDelete={(deletedId) => setPosts((prev) => prev.filter((post) => post.id !== deletedId))}
+                        />
                     )
                 )}
             </VStack>

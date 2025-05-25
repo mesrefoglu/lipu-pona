@@ -18,8 +18,8 @@ import { useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import { FiX, FiUpload } from "react-icons/fi";
 
-import { createPostApi } from "../api/endpoints.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { createPostApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 1000;
 

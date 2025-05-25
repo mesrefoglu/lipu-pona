@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getAuth, loginApi } from "../api/endpoints.js";
+import { getAuth, loginApi, logoutApi } from "../api/endpoints.js";
 
 const AuthContext = createContext();
 
@@ -34,11 +34,22 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const logout = async () => {
+        try {
+            await logoutApi();
+        } catch {
+            console.warn("Server-side logout failed, clearing client state anyway");
+        } finally {
+            setUser(null);
+            navigate("/account/login");
+        }
+    };
+
     useEffect(() => {
         checkAuth();
     }, []);
 
-    return <AuthContext.Provider value={{ user, loading, authLogin }}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={{ user, loading, authLogin, logout }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
