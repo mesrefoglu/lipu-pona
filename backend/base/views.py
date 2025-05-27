@@ -83,7 +83,11 @@ def GetUserProfile(request, username):
 
 @api_view(['POST'])
 def Register(request):
-    serializer = UserRegisterSerializer(data=request.data)
+    data = request.data
+
+    print("Register data received:", data)
+    serializer = UserRegisterSerializer(data=data)
+    print("Serializer initialized:", serializer)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
@@ -41,4 +39,4 @@ urlpatterns = [
     path('create-post/', CreatePost, name='create_post'),
     path('edit-post/<int:id>/', EditPost, name='edit_post'),
     path('delete-post/<int:id>/', DeletePost, name='delete_post'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]

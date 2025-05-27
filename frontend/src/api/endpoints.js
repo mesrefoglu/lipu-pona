@@ -32,7 +32,7 @@ export const registerApi = async (username, name, email, password) => {
         return { success: false };
     }
     try {
-        const response = await api.post("/register/", { username, email, name, password });
+        const response = await api.post("/register/", { username, first_name: name, email, password });
         return response.data;
     } catch (error) {
         console.warn("Error during registration:", error);
