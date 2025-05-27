@@ -85,9 +85,7 @@ def GetUserProfile(request, username):
 def Register(request):
     data = request.data
 
-    print("Register data received:", data)
     serializer = UserRegisterSerializer(data=data)
-    print("Serializer initialized:", serializer)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -139,8 +137,6 @@ def EditUser(request):
     serializer = MyUserSerializer(user, data, partial=True)
 
     if serializer.is_valid():
-        print("Data received:", serializer.initial_data)
-        print("Valid data:", serializer.validated_data)
         serializer.save()
         return Response({**serializer.data, "success": True}, status=status.HTTP_200_OK)
     else:

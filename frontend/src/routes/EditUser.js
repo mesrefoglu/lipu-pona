@@ -103,6 +103,7 @@ const EditUser = () => {
             });
 
             setImageFile(jpgFile);
+            setValues((v) => ({ ...v, profile_picture: "changed" }));
             setError("");
         } catch {
             setError("sitelen musi li ike! compression failed.");
@@ -112,9 +113,10 @@ const EditUser = () => {
     const clearFile = () => {
         if (imageFile) {
             setImageFile(null);
+            setValues((v) => ({ ...v, profile_picture: "changed" }));
             if (fileInputRef.current) fileInputRef.current.value = "";
         } else {
-            setValues((v) => ({ ...v, profile_picture: "" }));
+            setValues((v) => ({ ...v, profile_picture: "changed" }));
             setError("");
         }
     };
@@ -145,9 +147,12 @@ const EditUser = () => {
 
         if (hasErrors) return;
         try {
-            const { username, name, bio, profile_picture, newPassword } = values;
+            if (values.profile_picture !== "changed") {
+                setImageFile(null);
+            }
+            const { username, name, bio, imageFile, newPassword } = values;
 
-            await editUserApi(username, name, bio, profile_picture, newPassword ? newPassword : undefined);
+            await editUserApi(username, name, bio, newPassword || undefined, imageFile);
             const me = await authLogin(username, newPassword);
             navigate(`/${me.username}`);
         } catch {
@@ -243,13 +248,7 @@ const EditUser = () => {
                         {(imageFile || values.profile_picture) && (
                             <Box position="relative" w="full" mt={2}>
                                 <Image
-                                    src={
-                                        imageFile
-                                            ? URL.createObjectURL(imageFile)
-                                            : values.profile_picture
-                                            ? user.profile_picture
-                                            : ""
-                                    }
+                                    src={imageFile ? URL.createObjectURL(imageFile) : values.profile_picture || ""}
                                     alt="preview"
                                     borderRadius="md"
                                     objectFit="cover"
