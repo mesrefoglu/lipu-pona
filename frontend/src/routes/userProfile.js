@@ -138,7 +138,7 @@ const UserProfile = () => {
                                 </Text>
 
                                 {isSelf ? (
-                                    <HStack ml={{ base: 0, sm: 4 }} spacing={2} w={{ base: "full", sm: "auto" }}>
+                                    <HStack ml={{ base: 0, sm: 4 }} spacing={1} w={{ base: "full", sm: "auto" }}>
                                         <Button
                                             bg={COLOR_4}
                                             color={COLOR_1}
@@ -217,7 +217,7 @@ const UserProfile = () => {
                         </VStack>
                     </Flex>
 
-                    <VStack spacing={6} mt={8}>
+                    <VStack spacing={6} mt={12}>
                         {posts.map((post) => (
                             <Post
                                 key={post.id}

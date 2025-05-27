@@ -37,19 +37,15 @@ const CreatePost = () => {
         if (!file) return;
 
         try {
-            const options = {
+            const blob = await imageCompression(file, {
                 maxSizeMB: 1,
                 maxWidthOrHeight: 1024,
                 useWebWorker: true,
                 fileType: "image/jpeg",
-            };
-
-            const compressedBlob = await imageCompression(file, options);
-
-            const jpgFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+            });
+            const jpgFile = new File([blob], "img.jpg", {
                 type: "image/jpeg",
             });
-
             setImageFile(jpgFile);
             setError("");
         } catch {

@@ -40,18 +40,28 @@ export const registerApi = async (username, name, email, password) => {
     }
 };
 
-export const editUserApi = async (username, name, bio, imageFile, newPassword) => {
+export const editUserApi = async ({ username, name, bio, imageFile, removedPicture, newPassword, currentPassword }) => {
     const formData = new FormData();
     formData.append("username", username);
     formData.append("first_name", name);
     formData.append("bio", bio);
-    formData.append("password", newPassword ? newPassword : "");
-    if (imageFile) formData.append("profile_picture", imageFile);
+
+    if (removedPicture) {
+        formData.append("profile_picture", "");
+    } else if (imageFile) {
+        formData.append("profile_picture", imageFile);
+    }
+
+    if (newPassword) {
+        formData.append("new_password", newPassword);
+        formData.append("current_password", currentPassword);
+    }
+
     try {
-        const response = await api.patch("/edit-user/", formData, {
+        await api.patch("/edit-user/", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
-        return response.data;
+        return { success: true };
     } catch (error) {
         console.error("Error during user edit:", error);
         return { success: false };

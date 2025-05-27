@@ -128,7 +128,11 @@ def Authenticated(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def EditUser(request):
-    data = request.data
+    data = request.data.copy()
+
+    new_password = data.pop("new_password", [None])[0]
+    current_password = data.pop("current_password", [None])[0]
+
     try:
         user = MyUser.objects.get(username=request.user.username)
     except MyUser.DoesNotExist:
@@ -136,11 +140,20 @@ def EditUser(request):
 
     serializer = MyUserSerializer(user, data, partial=True)
 
-    if serializer.is_valid():
-        serializer.save()
-        return Response({**serializer.data, "success": True}, status=status.HTTP_200_OK)
-    else:
+    if not serializer.is_valid():
         return Response({"error": serializer.errors, "success": False}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if new_password:
+        if not current_password or not user.check_password(current_password):
+            return Response(
+                {"error": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.set_password(new_password)
+        user.save()
+    
+    serializer.save()
+    return Response({ "success": True}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
