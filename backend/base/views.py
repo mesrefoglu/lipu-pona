@@ -74,7 +74,7 @@ def GetUserProfile(request, username):
         return Response({"error": "User not found."}, status=404)
 
     try:
-        serializer = MyUserSerializer(user)
+        serializer = MyUserSerializer(user, context={'request': request})
         is_following = request.user in user.followers.all()
 
         return Response({**serializer.data, 'is_self': request.user.username == username, 'is_following': is_following})
@@ -122,6 +122,25 @@ def Logout(request):
 def Authenticated(request):
     serializer = MyUserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def EditUser(request):
+    data = request.data
+    try:
+        user = MyUser.objects.get(username=request.user.username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MyUserSerializer(user, data, partial=True)
+
+    if serializer.is_valid():
+        print("Data received:", serializer.initial_data)
+        print("Valid data:", serializer.validated_data)
+        serializer.save()
+        return Response({**serializer.data, "success": True}, status=status.HTTP_200_OK)
+    else:
+        return Response({"error": serializer.errors, "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -242,12 +261,12 @@ def CreatePost(request):
         user = MyUser.objects.get(username=request.user.username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
-    
+
     try:
         post = Post.objects.create(
             user=user,
-            image=data.get('image', None),
             text=data.get('text', ''),
+            image=data.get('image', None),
         )
     except Exception as e:
         logger.exception("Error creating post")
@@ -260,8 +279,7 @@ def CreatePost(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def EditPost(request, id):
-    data = request.data
-    text = data.get('text', None)
+    text = request.data.get("text")
 
     try:
         post = Post.objects.get(id=id)

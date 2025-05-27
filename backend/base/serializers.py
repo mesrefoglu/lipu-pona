@@ -4,7 +4,7 @@ from .models import MyUser, Post
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
-        fields = ['username', 'email', 'first_name', 'last_name', 'password']
+        fields = ['username', 'email', 'name', 'password']
         extra_kwargs = { 'password': {'write_only': True} }
     
     def create(self, validated_data):
@@ -12,7 +12,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            last_name='',
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -32,35 +32,37 @@ class MyUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = ['username', 'first_name', 'bio', 'profile_picture', 'post_count', 'follower_count', 'following_count']
-        read_only_fields = ['post_count', 'follower_count', 'following_count']
+        fields = [
+            'username',
+            'first_name',
+            'bio',
+            'profile_picture',
+            'post_count',
+            'follower_count',
+            'following_count',
+        ]
+        read_only_fields = [
+            'post_count',
+            'follower_count',
+            'following_count',
+        ]
 
 class PostSerializer(serializers.ModelSerializer):
-    username        = serializers.CharField(source='user.username', read_only=True)
     is_mine         = serializers.SerializerMethodField()
-    authorName      = serializers.SerializerMethodField()
-    authorPic       = serializers.SerializerMethodField()
-    image           = serializers.SerializerMethodField()
+    username        = serializers.CharField(source='user.username', read_only=True)
+    name            = serializers.CharField(source='user.first_name', read_only=True)
+    profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
     like_count      = serializers.SerializerMethodField()
     is_liked        = serializers.SerializerMethodField()
     comment_count   = serializers.SerializerMethodField()
     formatted_date  = serializers.SerializerMethodField()
     is_edited       = serializers.SerializerMethodField()
 
-    def get_authorName(self, obj):
-        return obj.user.first_name or obj.user.username
-
     def get_is_mine(self, obj):
         request = self.context.get('request', None)
         if not request or not request.user.is_authenticated:
             return False
         return obj.user == request.user
-
-    def get_authorPic(self, obj):
-        return obj.user.profile_picture.url if obj.user.profile_picture else ""
-    
-    def get_image(self, obj):
-        return obj.image.url if obj.image else ""
 
     def get_like_count(self, obj):
         return obj.likes.count()
@@ -81,7 +83,30 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Post
         fields = [
-            'id', 'username', 'is_mine', 'authorName', 'authorPic',
-            'image', 'text', 'created_at', 'formatted_date',
-            'like_count', 'is_liked', 'comment_count', 'is_edited',
+            'id',
+            'is_mine',
+            'username',
+            'name',
+            'profile_picture',
+            'image',
+            'text',
+            'created_at',
+            'formatted_date',
+            'like_count',
+            'is_liked',
+            'comment_count',
+            'is_edited',
+        ]
+        read_only_fields = [
+            'id',
+            'is_mine',
+            'username',
+            'name',
+            'profile_picture',
+            'created_at',
+            'formatted_date',
+            'like_count',
+            'is_liked',
+            'comment_count',
+            'is_edited',
         ]

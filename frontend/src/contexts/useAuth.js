@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getAuth, loginApi, logoutApi } from "../api/endpoints.js";
+import { getAuthApi, loginApi, logoutApi } from "../api/endpoints.js";
 
 const AuthContext = createContext();
 
@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const me = await getAuth();
+            const me = await getAuthApi();
             setUser(me);
         } catch {
             setUser(null);
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
     const authLogin = async (username, password) => {
         const resp = await loginApi(username, password);
         if (resp.success) {
-            const me = await getAuth();
+            const me = await getAuthApi();
             setUser(me);
             navigate("/");
             return me;

@@ -16,7 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit, FaTrash } from "react-icons/fa";
 
-import { API_URL, BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { likeApi, deletePostApi } from "../api/endpoints.js";
 import ConfirmDialog from "./ConfirmDialogue.js";
 
@@ -38,10 +38,10 @@ const ActionButton = ({ icon, label, onClick, active }) => (
 
 const Post = ({
     id,
-    username,
     is_mine,
-    authorName,
-    authorPic,
+    username,
+    name,
+    profile_picture,
     image,
     text,
     formatted_date,
@@ -101,18 +101,16 @@ const Post = ({
         }
     };
 
-    const imageSrc = image && (image.startsWith("http") ? image : API_URL + image);
-
     return (
         <>
             <Box w="full" mb={6}>
                 <Flex align="center" mb={3}>
                     <Flex onClick={() => navigate(`/${username}`)} cursor="pointer">
-                        <Avatar size="md" src={authorPic ? API_URL + authorPic : undefined} />
+                        <Avatar size="md" src={profile_picture || undefined} />
                         <HStack ml={3} spacing={2}>
-                            {authorName && (
+                            {name && (
                                 <Text fontWeight="bold" color={COLOR_4}>
-                                    {authorName}
+                                    {name}
                                 </Text>
                             )}
                             <Text fontSize="sm" color={COLOR_4}>
@@ -122,9 +120,9 @@ const Post = ({
                     </Flex>
                 </Flex>
 
-                {imageSrc && (
-                    <Link href={imageSrc} isExternal>
-                        <Image src={imageSrc} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
+                {image && (
+                    <Link href={image} isExternal>
+                        <Image src={image} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
                     </Link>
                 )}
 

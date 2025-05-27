@@ -13,9 +13,9 @@ import {
     AlertDescription,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { API_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
 import { followApi, getUserApi, getPostsApi } from "../api/endpoints.js";
 import Post from "../components/Post.js";
@@ -23,6 +23,7 @@ import ConfirmDialog from "../components/ConfirmDialogue.js";
 
 const UserProfile = () => {
     const { logout } = useAuth();
+    const navigate = useNavigate();
     const textColor = COLOR_4;
     const secondaryTextColor = "gray.300";
 
@@ -122,10 +123,7 @@ const UserProfile = () => {
                 <Box borderRadius="md" p={4}>
                     <Flex direction={{ base: "column", md: "row" }} alignItems="center" mb={6}>
                         <Box mr={{ base: 0, md: 10 }} mb={{ base: 6, md: 0 }}>
-                            <Avatar
-                                size="2xl"
-                                src={profile.profile_picture ? API_URL + profile.profile_picture : undefined}
-                            />
+                            <Avatar size="2xl" src={profile.profile_picture || undefined} />
                         </Box>
 
                         <VStack align="flex-start" flex={1} spacing={4}>
@@ -148,6 +146,9 @@ const UserProfile = () => {
                                             size="sm"
                                             borderRadius="md"
                                             px={6}
+                                            onClick={() => {
+                                                navigate("/account/edit");
+                                            }}
                                         >
                                             o ante e lipu mi
                                         </Button>
@@ -221,8 +222,8 @@ const UserProfile = () => {
                             <Post
                                 key={post.id}
                                 {...post}
-                                authorName={profile.first_name}
-                                authorPic={profile.profile_picture}
+                                name={profile.first_name}
+                                profile_picture={profile.profile_picture}
                                 onDelete={(deletedId) =>
                                     setPosts((prev) => prev.filter((post) => post.id !== deletedId))
                                 }

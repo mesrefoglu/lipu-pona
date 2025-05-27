@@ -9,12 +9,13 @@ import GuestRoute from "./components/GuestRoute.js";
 import { AuthProvider } from "./contexts/useAuth.js";
 
 import Home from "./routes/Home.js";
-import Login from "./routes/Login.js";
 import UserProfile from "./routes/UserProfile.js";
 import SinglePost from "./routes/SinglePost.js";
-import Register from "./routes/Register.js";
 import CreatePost from "./routes/CreatePost.js";
 import EditPost from "./routes/EditPost.js";
+import Login from "./routes/Login.js";
+import Register from "./routes/Register.js";
+import EditUser from "./routes/EditUser.js";
 
 function App() {
     return (
@@ -89,6 +90,16 @@ function App() {
                                     <GuestRoute>
                                         <Register />
                                     </GuestRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/account/edit"
+                            element={
+                                <Layout>
+                                    <PrivateRoute>
+                                        <EditUser />
+                                    </PrivateRoute>
                                 </Layout>
                             }
                         />

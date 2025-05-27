@@ -175,6 +175,7 @@ const CreatePost = () => {
                         rounded="lg"
                         bg={COLOR_3}
                         color={COLOR_4}
+                        _hover={{ bg: "teal" }}
                         type="submit"
                         isLoading={loading}
                         isDisabled={!text.trim() || text.length > MAX_CHARS}
