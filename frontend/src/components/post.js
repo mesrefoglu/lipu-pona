@@ -120,12 +120,6 @@ const Post = ({
                     </Flex>
                 </Flex>
 
-                {image && (
-                    <Link href={image} isExternal>
-                        <Image src={image} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
-                    </Link>
-                )}
-
                 {text && (
                     <Text mb={3} whiteSpace="pre-wrap" color={COLOR_4}>
                         {text}
@@ -136,6 +130,12 @@ const Post = ({
                     <Text fontSize="xs" color={COLOR_4} mb={2}>
                         (lipu li ante)
                     </Text>
+                )}
+
+                {image && (
+                    <Link href={image} isExternal>
+                        <Image src={image} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
+                    </Link>
                 )}
 
                 <Divider mb={2} />

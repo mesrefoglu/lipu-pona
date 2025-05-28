@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, VStack, Spinner } from "@chakra-ui/react";
 
 import { feedApi } from "../api/endpoints.js";
+import CreatePost from "./CreatePost.js";
 import Post from "../components/Post.js";
 
 const Home = () => {
@@ -38,24 +39,29 @@ const Home = () => {
     }, [page]);
 
     return (
-        <Box maxW="container.sm" mx="auto" py={4}>
-            <VStack spacing={6}>
-                {posts.map((post, i) =>
-                    i === posts.length - 1 ? (
-                        <Box ref={lastPostRef} w="full" key={post.id}>
-                            <Post {...post} />
-                        </Box>
-                    ) : (
-                        <Post
-                            key={post.id}
-                            {...post}
-                            onDelete={(deletedId) => setPosts((prev) => prev.filter((post) => post.id !== deletedId))}
-                        />
-                    )
-                )}
-            </VStack>
-            {loading && <Spinner mt={4} />}
-        </Box>
+        <>
+            <CreatePost />
+            <Box maxW="container.sm" mx="auto" py={4}>
+                <VStack spacing={6}>
+                    {posts.map((post, i) =>
+                        i === posts.length - 1 ? (
+                            <Box ref={lastPostRef} w="full" key={post.id}>
+                                <Post {...post} />
+                            </Box>
+                        ) : (
+                            <Post
+                                key={post.id}
+                                {...post}
+                                onDelete={(deletedId) =>
+                                    setPosts((prev) => prev.filter((post) => post.id !== deletedId))
+                                }
+                            />
+                        )
+                    )}
+                </VStack>
+                {loading && <Spinner mt={4} />}
+            </Box>
+        </>
     );
 };
 
