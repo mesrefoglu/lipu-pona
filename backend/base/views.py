@@ -298,7 +298,7 @@ def CreatePost(request):
         logger.exception("Error creating post")
         return Response({"error": "Error creating post."}, status=500)
 
-    serializer = PostSerializer(post)
+    serializer = PostSerializer(post, context={"request": request})
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -321,7 +321,7 @@ def EditPost(request, id):
     post.edited = True
     post.save()
 
-    serializer = PostSerializer(post)
+    serializer = PostSerializer(post, context={"request": request})
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 

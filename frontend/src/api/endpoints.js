@@ -64,7 +64,7 @@ export const editUserApi = async ({ username, name, bio, imageFile, removedPictu
         return { success: true };
     } catch (error) {
         console.error("Error during user edit:", error);
-        return { success: false };
+        return { success: false, error: error.response?.data?.error || "Unknown error" };
     }
 };
 

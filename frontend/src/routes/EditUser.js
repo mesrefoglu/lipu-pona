@@ -137,7 +137,7 @@ const EditUser = () => {
         });
         setError("");
         if (hasErrors) return;
-        const { success } = await editUserApi({
+        const { success, error } = await editUserApi({
             username: values.username,
             name: values.name,
             bio: values.bio,
@@ -148,7 +148,12 @@ const EditUser = () => {
         });
 
         if (!success) {
-            setError("pilin ike: o pali sin.");
+            console.log("Error editing user:", success, error);
+            if (error === "Current password is incorrect.") {
+                setError("nimi len pi tenpo ni li ike.");
+            } else {
+                setError("pilin ike: o pali sin.");
+            }
             return;
         }
 
@@ -174,13 +179,6 @@ const EditUser = () => {
                     <Heading size="lg" textAlign="center" color={COLOR_1}>
                         o ante e lipu mi
                     </Heading>
-
-                    {error && (
-                        <Alert status="error" rounded="md" w="full">
-                            <AlertIcon />
-                            {error}
-                        </Alert>
-                    )}
 
                     <FormControl id="username" isInvalid={touched.username && !!errors.username}>
                         <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
@@ -314,6 +312,13 @@ const EditUser = () => {
                             <FormErrorMessage>{errors.currentPassword}</FormErrorMessage>
                         )}
                     </FormControl>
+
+                    {error && (
+                        <Alert status="error" rounded="md" w="full">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
 
                     <Button
                         w="full"

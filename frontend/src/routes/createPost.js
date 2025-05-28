@@ -12,19 +12,21 @@ import {
     VStack,
     HStack,
     Avatar,
-    transform,
 } from "@chakra-ui/react";
 import { useEffect, useState, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import { FiImage, FiSend, FiX } from "react-icons/fi";
 import autosize from "autosize";
 
+import { useAuth } from "../contexts/useAuth.js";
 import { COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { createPostApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 1000;
 
-const CreatePost = () => {
+const CreatePost = ({ onPostCreated }) => {
+    const { user } = useAuth();
+
     const [text, setText] = useState("");
     const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState("");
@@ -70,7 +72,11 @@ const CreatePost = () => {
         }
         try {
             const res = await createPostApi(imageFile, text.trim());
-            return res;
+            console.log("Post created:", res);
+            if (onPostCreated) onPostCreated(res);
+            setText("");
+            clearFile();
+            setError("");
         } catch {
             setError("pilin ike: post li ken ala kama.");
         }
@@ -88,7 +94,7 @@ const CreatePost = () => {
         <Flex maxW="container.sm" py={4} mx="auto">
             <Box w="full">
                 <HStack align="start">
-                    <Avatar size="md" src={undefined} />
+                    <Avatar size="md" src={user?.profile_picture || undefined} />
                     <VStack w="full" as="form" py={1.2} spacing={3} onSubmit={handleSubmit}>
                         {error && (
                             <Alert status="error" rounded="md" w="full">
@@ -117,7 +123,7 @@ const CreatePost = () => {
                                     right={3}
                                     pointerEvents="none"
                                 >
-                                    {text.length > 900 ? text.length + "/" + MAX_CHARS : ""}
+                                    {text.length > 900 ? MAX_CHARS - text.length : ""}
                                 </Text>
                             </Box>
                         </FormControl>

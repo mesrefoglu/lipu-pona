@@ -24,6 +24,10 @@ const Home = () => {
         [loading, hasMore]
     );
 
+    const handleNewPost = (newPost) => {
+        setPosts((prev) => [newPost, ...prev]);
+    };
+
     useEffect(() => {
         const fetchPosts = async () => {
             setLoading(true);
@@ -40,7 +44,7 @@ const Home = () => {
 
     return (
         <>
-            <CreatePost />
+            <CreatePost onPostCreated={handleNewPost} />
             <Box maxW="container.sm" mx="auto" py={4}>
                 <VStack spacing={6}>
                     {posts.map((post, i) =>
