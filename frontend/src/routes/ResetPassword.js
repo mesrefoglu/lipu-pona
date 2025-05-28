@@ -1,0 +1,136 @@
+import {
+    Box,
+    Flex,
+    Heading,
+    FormControl,
+    FormLabel,
+    Input,
+    Button,
+    VStack,
+    FormErrorMessage,
+    Alert,
+    AlertIcon,
+    useToast,
+} from "@chakra-ui/react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { confirmPasswordResetApi } from "../api/endpoints.js";
+import { useAuth } from "../contexts/useAuth.js";
+
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+const ResetPassword = () => {
+    const { uid, token } = useParams();
+    const { authLogin } = useAuth();
+    const toast = useToast();
+
+    const [values, setValues] = useState({ newPassword: "", confirmPassword: "" });
+    const [touched, setTouched] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const errors = {
+        newPassword: !values.newPassword
+            ? "nimi len li wile."
+            : !passwordRegex.test(values.newPassword)
+            ? "nimi len sina li wile lon suli 8 sitelen."
+            : "",
+        confirmPassword: !values.confirmPassword
+            ? "o pana e nimi len a."
+            : values.newPassword !== values.confirmPassword
+            ? "nimi len li sama ala."
+            : "",
+    };
+    const hasErrors = Object.values(errors).some(Boolean);
+
+    const handleChange = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
+    const handleBlur = (field) => setTouched((t) => ({ ...t, [field]: true }));
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setTouched({ newPassword: true, confirmPassword: true });
+        if (hasErrors) return;
+        setLoading(true);
+        try {
+            const { username } = await confirmPasswordResetApi(uid, token, values.newPassword);
+            await authLogin(username, values.newPassword);
+            toast({
+                description: "nimi len li ante.",
+                status: "success",
+                duration: 10000,
+                position: "top",
+                isClosable: true,
+            });
+        } catch {
+            setError("pilin ike: lipu ni li suli ala.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Flex minH="80vh" align="center" justify="center" px={4}>
+            <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
+                <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit}>
+                    <Heading size="lg" textAlign="center" color={COLOR_1}>
+                        o ante e nimi len
+                    </Heading>
+
+                    {error && (
+                        <Alert status="error" rounded="md" w="full">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
+
+                    <FormControl id="newPassword" isInvalid={touched.newPassword && !!errors.newPassword}>
+                        <FormLabel color={COLOR_1}>nimi len sin</FormLabel>
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="password"
+                            value={values.newPassword}
+                            onChange={handleChange("newPassword")}
+                            onBlur={() => handleBlur("newPassword")}
+                        />
+                        {touched.newPassword && errors.newPassword && (
+                            <FormErrorMessage>{errors.newPassword}</FormErrorMessage>
+                        )}
+                    </FormControl>
+
+                    <FormControl id="confirmPassword" isInvalid={touched.confirmPassword && !!errors.confirmPassword}>
+                        <FormLabel color={COLOR_1}>nimi len sin a</FormLabel>
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="password"
+                            value={values.confirmPassword}
+                            onChange={handleChange("confirmPassword")}
+                            onBlur={() => handleBlur("confirmPassword")}
+                        />
+                        {touched.confirmPassword && errors.confirmPassword && (
+                            <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
+                        )}
+                    </FormControl>
+
+                    <Button
+                        w="full"
+                        size="lg"
+                        rounded="lg"
+                        bg={COLOR_3}
+                        color={COLOR_4}
+                        _hover={{ bg: "teal" }}
+                        type="submit"
+                        isDisabled={hasErrors}
+                        isLoading={loading}
+                    >
+                        o pana
+                    </Button>
+                </VStack>
+            </Box>
+        </Flex>
+    );
+};
+
+export default ResetPassword;

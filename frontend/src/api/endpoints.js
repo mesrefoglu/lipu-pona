@@ -186,3 +186,13 @@ export const deletePostApi = async (id) => {
         throw error;
     }
 };
+
+export const requestPasswordResetApi = async (email) => {
+    await api.post("/password-reset/request/", { email });
+    return { success: true };
+};
+
+export const confirmPasswordResetApi = async (uid, token, newPassword) => {
+    const response = await api.post("/password-reset/confirm/", { uid, token, new_password: newPassword });
+    return response.data;
+};

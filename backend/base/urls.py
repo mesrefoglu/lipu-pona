@@ -19,6 +19,8 @@ from .views import (
     CreatePost,
     EditPost,
     DeletePost,
+    PasswordResetRequest,
+    PasswordResetConfirm,
 )
 
 urlpatterns = [
@@ -39,4 +41,6 @@ urlpatterns = [
     path('create-post/', CreatePost, name='create_post'),
     path('edit-post/<int:id>/', EditPost, name='edit_post'),
     path('delete-post/<int:id>/', DeletePost, name='delete_post'),
+    path('password-reset/request/', PasswordResetRequest, name='password_reset_request'),
+    path('password-reset/confirm/', PasswordResetConfirm, name='password_reset_confirm'),
 ]

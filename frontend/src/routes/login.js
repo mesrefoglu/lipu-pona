@@ -73,6 +73,16 @@ const Login = () => {
                         />
                     </FormControl>
 
+                    <Link
+                        fontSize="sm"
+                        color="blue.500"
+                        as={RouterLink}
+                        to="/account/forgot-password"
+                        alignSelf="flex-start"
+                    >
+                        mi pini sona e nimi len.
+                    </Link>
+
                     <Button
                         w="full"
                         size="lg"
@@ -88,7 +98,7 @@ const Login = () => {
 
                     <Text fontSize="sm" color={COLOR_1}>
                         sina sin anu seme?{" "}
-                        <Link as={RouterLink} to="/account/register" color="blue.500" fontWeight="semibold">
+                        <Link color="blue.500" as={RouterLink} to="/account/register">
                             o pana e lipu sin
                         </Link>
                         .

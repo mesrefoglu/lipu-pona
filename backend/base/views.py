@@ -2,11 +2,24 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
 from .models import MyUser, Post
-from .serializers import MyUserSerializer, UserRegisterSerializer, PostSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .serializers import (
+    MyUserSerializer,
+    UserRegisterSerializer,
+    PostSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
+)
+from backend.utils import frontend_reset_url
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -325,3 +338,43 @@ def DeletePost(request, id):
 
     post.delete()
     return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["POST"])
+def PasswordResetRequest(request):
+    serializer = PasswordResetRequestSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data["email"]
+    try:
+        user = MyUser.objects.get(email=email)
+    except MyUser.DoesNotExist:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    reset_url = frontend_reset_url(uid, token)
+    send_mail(
+        "Password reset",
+        f"Use the link below to reset your password:\n{reset_url}",
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=True,
+    )
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["POST"])
+def PasswordResetConfirm(request):
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    uidb64 = serializer.validated_data["uid"]
+    token = serializer.validated_data["token"]
+    new_password = serializer.validated_data["new_password"]
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = MyUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, MyUser.DoesNotExist):
+        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+    if not default_token_generator.check_token(user, token):
+        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+    user.set_password(new_password)
+    user.save()
+    return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)

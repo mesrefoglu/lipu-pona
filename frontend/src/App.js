@@ -14,6 +14,8 @@ import SinglePost from "./routes/SinglePost.js";
 import CreatePost from "./routes/CreatePost.js";
 import EditPost from "./routes/EditPost.js";
 import Login from "./routes/Login.js";
+import ForgotPassword from "./routes/ForgotPassword.js";
+import ResetPassword from "./routes/ResetPassword.js";
 import Register from "./routes/Register.js";
 import EditUser from "./routes/EditUser.js";
 
@@ -79,6 +81,26 @@ function App() {
                                 <Layout>
                                     <GuestRoute>
                                         <Login />
+                                    </GuestRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/account/forgot-password"
+                            element={
+                                <Layout>
+                                    <GuestRoute>
+                                        <ForgotPassword />
+                                    </GuestRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/reset-password/:uid/:token"
+                            element={
+                                <Layout>
+                                    <GuestRoute>
+                                        <ResetPassword />
                                     </GuestRoute>
                                 </Layout>
                             }

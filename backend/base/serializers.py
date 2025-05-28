@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import MyUser, Post
+from django.contrib.auth.password_validation import validate_password
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -110,3 +111,15 @@ class PostSerializer(serializers.ModelSerializer):
             'comment_count',
             'is_edited',
         ]
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value

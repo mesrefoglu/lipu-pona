@@ -1,0 +1,99 @@
+import {
+    Box,
+    Flex,
+    Heading,
+    FormControl,
+    FormLabel,
+    Input,
+    Button,
+    VStack,
+    Alert,
+    AlertIcon,
+    useToast,
+    Link,
+} from "@chakra-ui/react";
+import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { requestPasswordResetApi } from "../api/endpoints.js";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const ForgotPassword = () => {
+    const toast = useToast();
+    const [email, setEmail] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const hasErrors = !email || !emailRegex.test(email);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        if (!emailRegex.test(email)) {
+            setError("o pana e lipu toki ilo pona.");
+            return;
+        }
+        setLoading(true);
+        await requestPasswordResetApi(email);
+        setLoading(false);
+        toast({
+            description: "a. mi pana e lipu ilo tawa sina.",
+            status: "success",
+            duration: 10000,
+            position: "top",
+            isClosable: true,
+        });
+        setEmail("");
+    };
+
+    return (
+        <Flex minH="80vh" align="center" justify="center" px={4}>
+            <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
+                <VStack as="form" spacing={6} onSubmit={handleSubmit} w="full">
+                    <Heading size="lg" color={COLOR_1} textAlign="center">
+                        mi pini sona e nimi len
+                    </Heading>
+
+                    {error && (
+                        <Alert status="error" rounded="md" w="full">
+                            <AlertIcon />
+                            {error}
+                        </Alert>
+                    )}
+
+                    <FormControl id="email">
+                        <FormLabel color={COLOR_1}>lipu toki ilo</FormLabel>
+                        <Input
+                            borderColor="gray.400"
+                            _hover={{ borderColor: COLOR_3 }}
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </FormControl>
+
+                    <Button
+                        w="full"
+                        size="lg"
+                        rounded="lg"
+                        bg={COLOR_3}
+                        color={COLOR_4}
+                        _hover={{ bg: "teal" }}
+                        type="submit"
+                        isDisabled={hasErrors}
+                        isLoading={loading}
+                    >
+                        o pana e lipu ilo
+                    </Button>
+
+                    <Link fontSize="sm" color="blue.500" as={RouterLink} to="/account/login">
+                        o kama lon insa.
+                    </Link>
+                </VStack>
+            </Box>
+        </Flex>
+    );
+};
+
+export default ForgotPassword;
