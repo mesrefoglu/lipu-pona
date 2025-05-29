@@ -196,3 +196,18 @@ export const confirmPasswordResetApi = async (uid, token, newPassword) => {
     const response = await api.post("/password-reset/confirm/", { uid, token, new_password: newPassword });
     return response.data;
 };
+
+export const getFollowersApi = async (username) => {
+    const res = await api.get(`/followers/${username}/`);
+    return res.data;
+};
+
+export const getFollowingApi = async (username) => {
+    const res = await api.get(`/following/${username}/`);
+    return res.data;
+};
+
+export const getLikersApi = async (id) => {
+    const res = await api.get(`/likers/${id}/`);
+    return res.data;
+};

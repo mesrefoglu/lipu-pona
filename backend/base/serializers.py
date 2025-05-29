@@ -48,6 +48,11 @@ class MyUserSerializer(serializers.ModelSerializer):
             'following_count',
         ]
 
+class BasicUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = MyUser
+        fields = ["username", "first_name", "profile_picture"]
+
 class PostSerializer(serializers.ModelSerializer):
     is_mine         = serializers.SerializerMethodField()
     username        = serializers.CharField(source='user.username', read_only=True)

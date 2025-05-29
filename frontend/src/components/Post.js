@@ -16,11 +16,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit, FaTrash } from "react-icons/fa";
 
+import { useAuth } from "../contexts/useAuth.js";
 import { BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
-import { likeApi, deletePostApi } from "../api/endpoints.js";
+import { likeApi, deletePostApi, getLikersApi } from "../api/endpoints.js";
 import ConfirmDialog from "./ConfirmDialogue.js";
+import ListOfUsers from "./ListOfUsers.js";
 
-const ActionButton = ({ icon, label, onClick, active }) => (
+const ActionButton = ({ icon, onClick, active }) => (
     <Button
         variant="ghost"
         p={2}
@@ -29,10 +31,8 @@ const ActionButton = ({ icon, label, onClick, active }) => (
         display="flex"
         alignItems="center"
         color={active ? COLOR_3 : COLOR_4}
-        gap={1}
     >
         <Icon as={icon} boxSize={7} />
-        {label != null && <Text>{label}</Text>}
     </Button>
 );
 
@@ -51,23 +51,50 @@ const Post = ({
     is_edited,
     onDelete,
 }) => {
-    const navigate = useNavigate();
     const toast = useToast();
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [liked, setLiked] = useState(is_liked);
     const [likes, setLikes] = useState(like_count);
     const [, setDeleting] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
 
+    const [likersOpen, setLikersOpen] = useState(false);
+    const [likersLoading, setLikersLoading] = useState(false);
+    const [likers, setLikers] = useState([]);
+
     const handleLike = async () => {
         const next = !liked;
         setLiked(next);
         setLikes((c) => c + (next ? 1 : -1));
+
+        setLikers((prev) => {
+            if (!user) return prev;
+            if (next) {
+                const others = prev.filter((u) => u.username !== user.username);
+                return [user, ...others];
+            }
+            return prev.filter((u) => u.username !== user.username);
+        });
+
         try {
             await likeApi(id);
         } catch {
-            setLiked(liked);
-            setLikes(like_count);
+            setLiked(!next);
+            setLikes((c) => c + (next ? -1 : 1));
+            setLikers((prev) => (next ? prev.filter((u) => u.username !== user?.username) : [user, ...prev]));
+        }
+    };
+
+    const openLikers = async () => {
+        setLikersOpen(true);
+        setLikersLoading(true);
+        try {
+            const data = await getLikersApi(id);
+            setLikers(data);
+        } finally {
+            setLikersLoading(false);
         }
     };
 
@@ -144,15 +171,23 @@ const Post = ({
                 </Text>
                 <Divider mb={2} />
 
-                <HStack spacing={6}>
-                    <ActionButton icon={liked ? FaHeart : FaRegHeart} label={likes} onClick={handleLike} />
-                    <ActionButton icon={FaRegComment} label={comment_count} onClick={() => {}} />
+                <HStack spacing={0}>
+                    <ActionButton icon={liked ? FaHeart : FaRegHeart} onClick={handleLike} />
+                    <Text color={COLOR_4} cursor="pointer" onClick={openLikers} pl={2} pr={4}>
+                        {likes} ijo olin
+                    </Text>
+
+                    <ActionButton icon={FaRegComment} onClick={() => navigate(`/post/${id}`)} />
+                    <Text color={COLOR_4} cursor="pointer" onClick={() => navigate(`/post/${id}`)} pl={2} pr={4}>
+                        {comment_count} ijo toki
+                    </Text>
+
                     <ActionButton icon={FaShare} onClick={handleShare} />
                     <Spacer />
                     {is_mine && (
                         <>
                             <ActionButton icon={FaEdit} onClick={() => navigate(`/post/edit/${id}`)} />
-                            <ActionButton icon={FaTrash} onClick={handleDelete} active={false} />
+                            <ActionButton icon={FaTrash} onClick={handleDelete} />
                         </>
                     )}
                 </HStack>
@@ -170,6 +205,14 @@ const Post = ({
                 bodyTextColor={COLOR_1}
                 cancelButtonColorScheme="gray"
                 confirmButtonColorScheme="red"
+            />
+
+            <ListOfUsers
+                isOpen={likersOpen}
+                onClose={() => setLikersOpen(false)}
+                users={likers}
+                title="jan olin e pana ni"
+                loading={likersLoading}
             />
         </>
     );

@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.db.models import Count
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -13,6 +14,7 @@ from django.contrib.auth.tokens import default_token_generator
 from .models import MyUser, Post
 from .serializers import (
     MyUserSerializer,
+    BasicUserSerializer,
     UserRegisterSerializer,
     PostSerializer,
     PasswordResetRequestSerializer,
@@ -104,6 +106,7 @@ def Register(request):
         serializer.save()
         return Response({"success": True}, status=status.HTTP_201_CREATED)
     except Exception as exc:
+        print(exc)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['POST'])
@@ -378,3 +381,64 @@ def PasswordResetConfirm(request):
     user.set_password(new_password)
     user.save()
     return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def Followers(request, username):
+    try:
+        user = MyUser.objects.get(username=username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+    followers_qs = (
+        user.followers.all()
+            .annotate(follower_count=Count("followers"))
+            .order_by("-follower_count")
+    )
+
+    followers_list = list(followers_qs)
+    if request.user in followers_list:
+        followers_list = [request.user] + [u for u in followers_list if u != request.user]
+
+    serializer = BasicUserSerializer(followers_list, many=True, context={"request": request})
+    return Response(serializer.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def Following(request, username):
+    try:
+        user = MyUser.objects.get(username=username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+    following_qs = (
+        user.following.all()
+            .annotate(follower_count=Count("followers"))
+            .order_by("-follower_count")
+    )
+    following_list = list(following_qs)
+    if request.user in following_list:
+        following_list = [request.user] + [u for u in following_list if u != request.user]
+
+    serializer = BasicUserSerializer(following_qs, many=True, context={"request": request})
+    return Response(serializer.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def Likers(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
+
+    likers_qs = (
+        post.likes.all()
+            .annotate(follower_count=Count("followers"))
+            .order_by("-follower_count")
+    )
+    likers_list = list(likers_qs)
+    if request.user in likers_list:
+        likers_list = [request.user] + [u for u in likers_list if u != request.user]
+
+    serializer = BasicUserSerializer(likers_qs, many=True, context={"request": request})
+    return Response(serializer.data)

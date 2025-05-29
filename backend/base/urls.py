@@ -21,6 +21,9 @@ from .views import (
     DeletePost,
     PasswordResetRequest,
     PasswordResetConfirm,
+    Followers,
+    Following,
+    Likers,
 )
 
 urlpatterns = [
@@ -43,4 +46,7 @@ urlpatterns = [
     path('delete-post/<int:id>/', DeletePost, name='delete_post'),
     path('password-reset/request/', PasswordResetRequest, name='password_reset_request'),
     path('password-reset/confirm/', PasswordResetConfirm, name='password_reset_confirm'),
+    path("followers/<str:username>/", Followers, name="followers"),
+    path("following/<str:username>/", Following, name="following"),
+    path("likers/<int:id>/", Likers, name="likers"),
 ]

@@ -17,7 +17,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
-import { followApi, getUserApi, getPostsApi } from "../api/endpoints.js";
+import { followApi, getUserApi, getFollowersApi, getFollowingApi, getPostsApi } from "../api/endpoints.js";
+import ListOfUsers from "../components/ListOfUsers.js";
 import CreatePost from "../components/CreatePost.js";
 import Post from "../components/Post.js";
 import ConfirmDialog from "../components/ConfirmDialogue.js";
@@ -35,6 +36,8 @@ const UserProfile = () => {
     const [isFollowing, setIsFollowing] = useState(false);
     const [posts, setPosts] = useState([]);
 
+    const [confirmOpen, setConfirmOpen] = useState(false);
+
     const [profile, setProfile] = useState({
         username: "",
         first_name: "",
@@ -47,7 +50,34 @@ const UserProfile = () => {
         private: false,
     });
 
-    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [usersModalOpen, setUsersModalOpen] = useState(false);
+    const [usersModalTitle, setUsersModalTitle] = useState("");
+    const [usersModalLoading, setUsersModalLoading] = useState(false);
+    const [usersInModal, setUsersInModal] = useState([]);
+
+    const openFollowers = async () => {
+        setUsersModalTitle("jan kute");
+        setUsersModalOpen(true);
+        setUsersModalLoading(true);
+        try {
+            const data = await getFollowersApi(username);
+            setUsersInModal(data);
+        } finally {
+            setUsersModalLoading(false);
+        }
+    };
+
+    const openFollowing = async () => {
+        setUsersModalTitle("jan li mi kute");
+        setUsersModalOpen(true);
+        setUsersModalLoading(true);
+        try {
+            const data = await getFollowingApi(username);
+            setUsersInModal(data);
+        } finally {
+            setUsersModalLoading(false);
+        }
+    };
 
     const handleFollowButton = async () => {
         const data = await followApi(username);
@@ -193,17 +223,19 @@ const UserProfile = () => {
                     <HStack spacing={6} py={2}>
                         <HStack>
                             <Text fontWeight="bold" color={textColor}>
-                                {profile.post_count || 0}
+                                {profile.post_count}
                             </Text>
                             <Text color={secondaryTextColor}>pana</Text>
                         </HStack>
-                        <HStack>
+
+                        <HStack onClick={openFollowers} cursor="pointer">
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.follower_count}
                             </Text>
                             <Text color={secondaryTextColor}>jan kute</Text>
                         </HStack>
-                        <HStack>
+
+                        <HStack onClick={openFollowing} cursor="pointer">
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.following_count}
                             </Text>
@@ -243,6 +275,7 @@ const UserProfile = () => {
                     />
                 ))}
             </VStack>
+
             <ConfirmDialog
                 isOpen={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
@@ -255,6 +288,14 @@ const UserProfile = () => {
                 bodyTextColor={COLOR_1}
                 cancelButtonColorScheme="gray"
                 confirmButtonColorScheme="red"
+            />
+
+            <ListOfUsers
+                isOpen={usersModalOpen}
+                onClose={() => setUsersModalOpen(false)}
+                users={usersInModal}
+                title={usersModalTitle}
+                loading={usersModalLoading}
             />
         </Box>
     );
