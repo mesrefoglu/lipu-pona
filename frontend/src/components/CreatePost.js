@@ -72,7 +72,6 @@ const CreatePost = ({ onPostCreated }) => {
         }
         try {
             const res = await createPostApi(imageFile, text.trim());
-            console.log("Post created:", res);
             if (onPostCreated) onPostCreated(res);
             setText("");
             clearFile();
@@ -91,7 +90,7 @@ const CreatePost = ({ onPostCreated }) => {
     }, []);
 
     return (
-        <Flex maxW="container.sm" py={4} mx="auto">
+        <Flex py={4} mx="auto">
             <Box w="full">
                 <HStack align="start">
                     <Avatar size="md" src={user?.profile_picture || undefined} />

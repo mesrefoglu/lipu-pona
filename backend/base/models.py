@@ -7,13 +7,13 @@ def profile_upload_path(instance, filename):
     ext = os.path.splitext(filename)[1]
     ts = timezone.now().strftime("%Y%m%d%H%M%S")
     uid = uuid.uuid4().hex
-    return f"profile_pictures/{instance.username}_profile_{ts}_{uid}{ext}"
+    return f"profile_pictures/profile_{instance.id}_{ts}_{uid}{ext}"
 
 def post_upload_path(instance, filename):
     ext = os.path.splitext(filename)[1]
     ts = timezone.now().strftime("%Y%m%d%H%M%S")
     uid = uuid.uuid4().hex
-    return f"posts/{instance.user.username}_post_{ts}_{uid}{ext}"
+    return f"posts/post_{instance.user.id}_{ts}_{uid}{ext}"
 
 class MyUser(AbstractUser):
     username = models.CharField(max_length=20, unique=True)

@@ -148,7 +148,6 @@ const EditUser = () => {
         });
 
         if (!success) {
-            console.log("Error editing user:", success, error);
             if (error === "Current password is incorrect.") {
                 setError("nimi len pi tenpo ni li ike.");
             } else {

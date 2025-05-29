@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, VStack, Spinner } from "@chakra-ui/react";
 
 import { feedApi } from "../api/endpoints.js";
-import CreatePost from "./CreatePost.js";
+import CreatePost from "../components/CreatePost.js";
 import Post from "../components/Post.js";
 
 const Home = () => {
@@ -43,7 +43,7 @@ const Home = () => {
     }, [page]);
 
     return (
-        <>
+        <Box maxW="container.sm" mx="auto" p={2}>
             <CreatePost onPostCreated={handleNewPost} />
             <Box maxW="container.sm" mx="auto" py={4}>
                 <VStack spacing={6}>
@@ -65,7 +65,7 @@ const Home = () => {
                 </VStack>
                 {loading && <Spinner mt={4} />}
             </Box>
-        </>
+        </Box>
     );
 };
 
