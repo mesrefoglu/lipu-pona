@@ -169,7 +169,7 @@ const Comment = ({
                         <VStack align="start" flex="1" minW="0" spacing={0}>
                             <HStack w="full" spacing={1}>
                                 {name && (
-                                    <Box flex="1" minW="0">
+                                    <Box minW="0">
                                         <Text fontWeight="bold" color={COLOR_4} isTruncated whiteSpace="nowrap">
                                             {name}
                                         </Text>

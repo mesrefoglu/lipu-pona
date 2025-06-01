@@ -19,7 +19,7 @@ import { useAuth } from "../contexts/useAuth.js";
 import { COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { createCommentApi } from "../api/endpoints.js";
 
-const MAX_CHARS = 1000;
+const MAX_CHARS = 250;
 
 const CreatePost = ({ onPostCreated }) => {
     const { user } = useAuth();
@@ -60,7 +60,7 @@ const CreatePost = ({ onPostCreated }) => {
             <Box w="full">
                 <HStack align="start">
                     <Avatar size="md" src={user?.profile_picture || undefined} />
-                    <VStack w="full" as="form" py={1.2} spacing={3} onSubmit={handleSubmit}>
+                    <VStack w="full" ml={2} spacing={2} as="form" onSubmit={handleSubmit}>
                         {error && (
                             <Alert status="error" rounded="md" w="full">
                                 <AlertIcon />
@@ -68,12 +68,13 @@ const CreatePost = ({ onPostCreated }) => {
                             </Alert>
                         )}
                         <FormControl id="text" isRequired>
-                            <Box position="relative" w="full">
+                            <Box w="full">
                                 <Textarea
                                     value={text}
                                     placeholder="o toki e ijo..."
                                     onChange={handleTextChange}
                                     ref={textInputRef}
+                                    p={0}
                                     rows={1}
                                     borderColor="transparent"
                                     _hover={{ borderColor: "transparent" }}

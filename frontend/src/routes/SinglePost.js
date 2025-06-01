@@ -101,11 +101,11 @@ const SinglePost = () => {
             <VStack spacing={2} align="stretch">
                 <Post {...post} />
 
-                <Box mt={4} mb={2}>
+                <Box mt={4} mb={6}>
                     <CreateComment onPostCreated={handleCommentCreated} />
                 </Box>
 
-                <VStack spacing={2} w="full" align="stretch">
+                <VStack spacing={6} w="full" align="stretch">
                     {comments.map((comment) => (
                         <Comment key={comment.id} {...comment} onDelete={handleCommentDeleted} />
                     ))}
