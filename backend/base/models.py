@@ -36,3 +36,14 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s post"
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField(max_length=250)
+    created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(MyUser, related_name='liked_comments', blank=True)
+    edited = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username}'s comment on post/{self.post.id}"

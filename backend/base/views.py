@@ -11,12 +11,13 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
-from .models import MyUser, Post
+from .models import MyUser, Post, Comment
 from .serializers import (
     MyUserSerializer,
     BasicUserSerializer,
     UserRegisterSerializer,
     PostSerializer,
+    CommentSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
@@ -218,6 +219,23 @@ def GetPost(request, id):
     data['is_liked'] = request.user in post.likes.all()
 
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetComments(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
+
+    comments_qs = post.comments.all().order_by('-like_count', '-created_at')
+    paginator = Paginator(comments_qs, 5)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    serializer = CommentSerializer(page_obj.object_list, many=True, context={'request': request})
+
+    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
-from .models import MyUser, Post
+from .models import MyUser, Post, Comment
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,7 +61,7 @@ class PostSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
     like_count      = serializers.SerializerMethodField()
     is_liked        = serializers.SerializerMethodField()
-    # comment_count   = serializers.SerializerMethodField()
+    comment_count   = serializers.SerializerMethodField()
     formatted_date  = serializers.SerializerMethodField()
     is_edited       = serializers.SerializerMethodField()
 
@@ -78,8 +78,8 @@ class PostSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return request.user in obj.likes.all() if request and request.user.is_authenticated else False
 
-    # def get_comment_count(self, obj):
-    #     return obj.comments.count()
+    def get_comment_count(self, obj):
+        return obj.comments.count()
 
     def get_formatted_date(self, obj):
         return obj.created_at.strftime("%d/%m/%Y %H:%M")
@@ -101,7 +101,7 @@ class PostSerializer(serializers.ModelSerializer):
             'formatted_date',
             'like_count',
             'is_liked',
-            # 'comment_count',
+            'comment_count',
             'is_edited',
         ]
         read_only_fields = [
@@ -114,7 +114,64 @@ class PostSerializer(serializers.ModelSerializer):
             'formatted_date',
             'like_count',
             'is_liked',
-            # 'comment_count',
+            'comment_count',
+            'is_edited',
+        ]
+
+class CommentSerializer(serializers.ModelSerializer):
+    is_mine         = serializers.SerializerMethodField()
+    username        = serializers.CharField(source='user.username', read_only=True)
+    name            = serializers.CharField(source='user.first_name', read_only=True)
+    profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
+    like_count      = serializers.SerializerMethodField()
+    is_liked        = serializers.SerializerMethodField()
+    formatted_date  = serializers.SerializerMethodField()
+    is_edited       = serializers.SerializerMethodField()
+
+    def get_is_mine(self, obj):
+        request = self.context.get('request', None)
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.user == request.user
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
+
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        return request.user in obj.likes.all() if request and request.user.is_authenticated else False
+
+    def get_formatted_date(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y %H:%M")
+    
+    def get_is_edited(self, obj):
+        return obj.edited
+
+    class Meta:
+        model  = Comment
+        fields = [
+            'id',
+            'is_mine',
+            'username',
+            'name',
+            'profile_picture',
+            'text',
+            'created_at',
+            'formatted_date',
+            'like_count',
+            'is_liked',
+            'is_edited',
+        ]
+        read_only_fields = [
+            'id',
+            'is_mine',
+            'username',
+            'name',
+            'profile_picture',
+            'created_at',
+            'formatted_date',
+            'like_count',
+            'is_liked',
             'is_edited',
         ]
 
