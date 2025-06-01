@@ -168,6 +168,9 @@ export const createPostApi = async (imageFile, text) => {
 };
 
 export const editPostApi = async (id, text) => {
+    if (text === "error") {
+        throw new Error("Simulated error for testing");
+    }
     try {
         const result = await api.post(`/edit-post/${id}/`, { text: text.trim() });
         return result.data;

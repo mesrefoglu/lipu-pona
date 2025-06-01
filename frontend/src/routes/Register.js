@@ -21,16 +21,28 @@ import { useAuth } from "../contexts/useAuth.js";
 import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
 
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW ]{0,50}$/;
+const emailRegex = /^(?=.{5,200}$)[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+const checkForLength = (str, min, max) => {
+    return str.length >= min && str.length <= max;
+};
 
 const getErrors = (fields, usernameTaken, emailTaken) => ({
     username: !fields.username
         ? "nimi lipu li wile."
+        : !checkForLength(fields.username, 3, 20)
+        ? "nimi ilo li wile ja e 3-20 sitelen."
         : !usernameRegex.test(fields.username)
-        ? "nimi ilo li wile lon 3-20 sitelen."
+        ? "nimi lipu li wile ja e sitelen a-z, A-Z, 0-9."
         : usernameTaken
         ? "nimi lipu ni li lon. o ante."
+        : "",
+    name: !checkForLength(fields.name, 0, 50)
+        ? "nimi li wile ja e 0-50 sitelen."
+        : !nameRegex.test(fields.name)
+        ? "nimi li wile ja e sitelen pi toki pona."
         : "",
     email: !fields.email
         ? "lipu toki ilo li wile."
@@ -41,8 +53,10 @@ const getErrors = (fields, usernameTaken, emailTaken) => ({
         : "",
     password: !fields.password
         ? "nimi len li wile."
+        : !checkForLength(fields.password, 8, 100)
+        ? "nimi len li wile ja e 8-100 sitelen."
         : !passwordRegex.test(fields.password)
-        ? "nimi len sina li wile lon suli 8 sitelen."
+        ? "nimi len li wile ja e sitelen wan. ni li wile ja sitelen nanpa wan kin."
         : "",
     confirmPassword: !fields.confirmPassword
         ? "o pana e nimi len a."
@@ -133,14 +147,19 @@ const Register = () => {
                         {touched.username && errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
                     </FormControl>
 
-                    <FormControl id="name">
+                    <FormControl id="name" isInvalid={touched.name && !!errors.name}>
                         <FormLabel color={COLOR_1}>nimi</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="text"
-                            {...{ value: values.name, onChange: handleChange("name") }}
+                            {...{
+                                value: values.name,
+                                onChange: handleChange("name"),
+                                onBlur: () => handleBlur("name"),
+                            }}
                         />
+                        {touched.name && errors.name && <FormErrorMessage>{errors.name}</FormErrorMessage>}
                     </FormControl>
 
                     <FormControl id="email" isInvalid={touched.email && !!errors.email}>

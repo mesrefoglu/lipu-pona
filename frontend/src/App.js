@@ -11,7 +11,6 @@ import { AuthProvider } from "./contexts/useAuth.js";
 import Home from "./routes/Home.js";
 import UserProfile from "./routes/UserProfile.js";
 import SinglePost from "./routes/SinglePost.js";
-import EditPost from "./routes/EditPost.js";
 import Login from "./routes/Login.js";
 import ForgotPassword from "./routes/ForgotPassword.js";
 import ResetPassword from "./routes/ResetPassword.js";
@@ -50,16 +49,6 @@ function App() {
                                 <Layout>
                                     <PrivateRoute>
                                         <SinglePost />
-                                    </PrivateRoute>
-                                </Layout>
-                            }
-                        />
-                        <Route
-                            path="/post/edit/:id"
-                            element={
-                                <Layout>
-                                    <PrivateRoute>
-                                        <EditPost />
                                     </PrivateRoute>
                                 </Layout>
                             }

@@ -27,22 +27,40 @@ import { checkUsernameApi, editUserApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 250;
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
+const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW ]{0,50}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-const getErrors = (f, taken) => ({
-    username: !f.username
+const checkForLength = (str, min, max) => {
+    return str.length >= min && str.length <= max;
+};
+
+const getErrors = (fields, usernameTaken) => ({
+    username: !fields.username
         ? "nimi lipu li wile."
-        : !usernameRegex.test(f.username)
-        ? "nimi ilo li wile lon 3-20 sitelen."
-        : taken
+        : !checkForLength(fields.username, 3, 20)
+        ? "nimi ilo li wile ja e 3-20 sitelen."
+        : !usernameRegex.test(fields.username)
+        ? "nimi lipu li wile ja e sitelen a-z, A-Z, 0-9."
+        : usernameTaken
         ? "nimi lipu ni li lon. o ante."
         : "",
-    currentPassword: f.newPassword && !f.currentPassword ? "nimi len pi tenpo ni li wile." : "",
-    newPassword: f.newPassword && !passwordRegex.test(f.newPassword) ? "nimi len sina li wile lon suli 8 sitelen." : "",
+    name: !checkForLength(fields.name, 0, 50)
+        ? "nimi li wile ja e 0-50 sitelen."
+        : !nameRegex.test(fields.name)
+        ? "nimi li wile ja e sitelen pi toki pona."
+        : "",
+    currentPassword: fields.newPassword && !fields.currentPassword ? "nimi len pi tenpo ni li wile." : "",
+    newPassword: !fields.newPassword
+        ? ""
+        : !checkForLength(fields.newPassword, 8, 100)
+        ? "nimi len li wile ja e 8-100 sitelen."
+        : !passwordRegex.test(fields.newPassword)
+        ? "nimi len li wile ja e sitelen wan. ni li wile ja sitelen nanpa wan kin."
+        : "",
     confirmPassword:
-        f.newPassword && !f.confirmPassword
+        fields.newPassword && !fields.confirmPassword
             ? "o pana e nimi len a."
-            : f.confirmPassword !== f.newPassword
+            : fields.confirmPassword !== fields.newPassword
             ? "nimi len li sama ala."
             : "",
 });
@@ -192,7 +210,7 @@ const EditUser = () => {
                         {touched.username && errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
                     </FormControl>
 
-                    <FormControl id="name">
+                    <FormControl id="name" isInvalid={touched.name && !!errors.name}>
                         <FormLabel color={COLOR_1}>nimi</FormLabel>
                         <Input
                             borderColor="gray.400"
@@ -200,7 +218,9 @@ const EditUser = () => {
                             type="text"
                             value={values.name}
                             onChange={handleChange("name")}
+                            onBlur={() => handleBlur("name")}
                         />
+                        {touched.name && errors.name && <FormErrorMessage>{errors.name}</FormErrorMessage>}
                     </FormControl>
 
                     <FormControl id="bio">

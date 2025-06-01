@@ -68,7 +68,7 @@ const UserProfile = () => {
     };
 
     const openFollowing = async () => {
-        setUsersModalTitle("jan li mi kute");
+        setUsersModalTitle("jan pi kute mi");
         setUsersModalOpen(true);
         setUsersModalLoading(true);
         try {
@@ -158,7 +158,7 @@ const UserProfile = () => {
 
     return (
         <Box maxW="container.sm" mx="auto" p={2}>
-            <Flex direction={{ base: "column", md: "row" }} alignItems="center" mb={4}>
+            <Flex direction={{ base: "column", md: "row" }} align={{ base: "center", md: "flex-start" }} mb={4}>
                 <Box mr={{ base: 0, md: 10 }} mb={{ base: 6, md: 0 }}>
                     <Avatar size="2xl" src={profile.profile_picture || undefined} />
                 </Box>
@@ -169,7 +169,7 @@ const UserProfile = () => {
                         alignItems={{ base: "flex-start", sm: "center" }}
                         w="full"
                     >
-                        <Text fontSize="xl" fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
+                        <Text fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
                             @{profile.username}
                         </Text>
 
@@ -239,15 +239,17 @@ const UserProfile = () => {
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.following_count}
                             </Text>
-                            <Text color={secondaryTextColor}>jan li mi kute</Text>
+                            <Text color={secondaryTextColor}>jan pi kute mi</Text>
                         </HStack>
                     </HStack>
 
                     <VStack align="flex-start" spacing={1}>
-                        <Text fontWeight="medium" color={textColor}>
+                        <Text fontWeight="medium" color={textColor} maxW="container.sm" noOfLines={1}>
                             {profile.first_name}
                         </Text>
-                        <Text color={textColor}>{profile.bio}</Text>
+                        <Text color={textColor} whiteSpace="pre-wrap">
+                            {profile.bio}
+                        </Text>
                     </VStack>
                 </VStack>
             </Flex>

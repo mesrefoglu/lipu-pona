@@ -20,7 +20,7 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
-from backend.utils import frontend_reset_url
+from backend.utils import frontend_reset_url, normalize_whitespace, normalize_name
 
 import logging
 
@@ -98,7 +98,8 @@ def GetUserProfile(request, username):
 
 @api_view(['POST'])
 def Register(request):
-    data = request.data
+    data = request.data.copy()
+    data['first_name'] = normalize_name(data.get('first_name', '')).strip()
 
     serializer = UserRegisterSerializer(data=data)
     try:
@@ -153,6 +154,8 @@ def EditUser(request):
         user = MyUser.objects.get(username=request.user.username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
 
     serializer = MyUserSerializer(user, data, partial=True)
 
@@ -169,7 +172,7 @@ def EditUser(request):
         user.save()
     
     serializer.save()
-    return Response({ "success": True}, status=status.HTTP_200_OK)
+    return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -284,48 +287,25 @@ def EmailExists(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def CreatePost(request):
-    data = request.data
-
-    try:
-        user = MyUser.objects.get(username=request.user.username)
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=404)
-
-    try:
-        post = Post.objects.create(
-            user=user,
-            text=data.get('text', ''),
-            image=data.get('image', None),
-        )
-    except Exception as e:
-        logger.exception("Error creating post")
-        return Response({"error": "Error creating post."}, status=500)
-
-    serializer = PostSerializer(post, context={"request": request})
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    serializer = PostSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(user=request.user)
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def EditPost(request, id):
-    text = request.data.get("text")
-
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=404)
-
-    if post.user != request.user:
-        return Response({"error": "You do not have permission to edit this post."}, status=403)
-
-    if text is not None:
-        post.text = text
-
-    post.edited = True
-    post.save()
-
-    serializer = PostSerializer(post, context={"request": request})
-
+    post = Post.objects.filter(id=id).first()
+    if not post:
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(edited=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])
