@@ -122,7 +122,7 @@ const CreatePost = ({ onPostCreated }) => {
                                     right={3}
                                     pointerEvents="none"
                                 >
-                                    {text.length > 900 ? MAX_CHARS - text.length : ""}
+                                    {text.length > MAX_CHARS - 100 ? MAX_CHARS - text.length : ""}
                                 </Text>
                             </Box>
                         </FormControl>

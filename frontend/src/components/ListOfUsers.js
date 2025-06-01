@@ -37,20 +37,23 @@ const ListOfUsers = ({ isOpen, onClose, users, title, loading }) => {
                                 <HStack
                                     key={u.username}
                                     spacing={1}
-                                    pl={4}
-                                    pb={2}
-                                    pt={2}
+                                    px={4}
+                                    py={2}
                                     _hover={{ bg: COLOR_2 }}
                                     cursor="pointer"
                                     onClick={() => goProfile(u.username)}
                                 >
                                     <Avatar size="md" src={u.profile_picture || undefined} />
-                                    <Text fontWeight="bold" color={COLOR_4} pl={4}>
-                                        {u.first_name || u.username}
-                                    </Text>
-                                    <Text fontSize="sm" color={COLOR_4}>
-                                        @{u.username}
-                                    </Text>
+                                    <VStack align="start" spacing={0}>
+                                        {u.first_name && (
+                                            <Text fontWeight="bold" color={COLOR_4} pl={4} maxW="300px" isTruncated>
+                                                {u.first_name}
+                                            </Text>
+                                        )}
+                                        <Text fontSize="sm" color={COLOR_4} pl={4} whiteSpace="nowrap">
+                                            @{u.username}
+                                        </Text>
+                                    </VStack>
                                 </HStack>
                             ))}
                         </VStack>

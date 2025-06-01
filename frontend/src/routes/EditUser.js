@@ -239,13 +239,13 @@ const EditUser = () => {
                             />
                             <Text
                                 fontSize="xs"
-                                color={values.bio.length === MAX_CHARS ? "red.500" : COLOR_1}
+                                color={values.bio.length === MAX_CHARS ? "red.500" : "orange.500"}
                                 position="absolute"
                                 bottom={2}
                                 right={3}
                                 pointerEvents="none"
                             >
-                                {values.bio.length}/{MAX_CHARS}
+                                {values.bio.length > MAX_CHARS - 100 ? MAX_CHARS - values.bio.length : ""}
                             </Text>
                         </Box>
                     </FormControl>
@@ -295,6 +295,7 @@ const EditUser = () => {
                             value={values.newPassword}
                             onChange={handleChange("newPassword")}
                             onBlur={() => handleBlur("newPassword")}
+                            autoComplete="new-password"
                         />
                         {touched.newPassword && errors.newPassword && (
                             <FormErrorMessage>{errors.newPassword}</FormErrorMessage>
@@ -310,6 +311,7 @@ const EditUser = () => {
                             value={values.confirmPassword}
                             onChange={handleChange("confirmPassword")}
                             onBlur={() => handleBlur("confirmPassword")}
+                            autoComplete="new-password"
                         />
                         {touched.confirmPassword && errors.confirmPassword && (
                             <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>

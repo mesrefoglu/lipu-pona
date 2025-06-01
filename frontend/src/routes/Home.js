@@ -46,7 +46,7 @@ const Home = () => {
         <Box maxW="container.sm" mx="auto" p={2}>
             <CreatePost onPostCreated={handleNewPost} />
             <Box maxW="container.sm" mx="auto" py={4}>
-                <VStack spacing={6}>
+                <VStack spacing={8}>
                     {posts.map((post, i) =>
                         i === posts.length - 1 ? (
                             <Box ref={lastPostRef} w="full" key={post.id}>

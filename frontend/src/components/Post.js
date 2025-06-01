@@ -15,6 +15,7 @@ import {
     Editable,
     EditablePreview,
     EditableTextarea,
+    VStack,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit, FaTrash } from "react-icons/fa";
@@ -22,7 +23,7 @@ import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
 import { BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
-import { likeApi, deletePostApi, getLikersApi, editPostApi } from "../api/endpoints.js";
+import { likeApi, getLikersApi, editPostApi, deletePostApi } from "../api/endpoints.js";
 import ConfirmDialog from "./ConfirmDialogue.js";
 import ListOfUsers from "./ListOfUsers.js";
 
@@ -49,7 +50,7 @@ const Post = ({
     name,
     profile_picture,
     image,
-    text: originalText,
+    text,
     formatted_date,
     like_count,
     is_liked,
@@ -61,14 +62,14 @@ const Post = ({
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [displayText, setDisplayText] = useState(originalText);
+    const [displayText, setDisplayText] = useState(text);
     const [edited, setEdited] = useState(originalEdited);
 
     const [liked, setLiked] = useState(is_liked);
     const [likes, setLikes] = useState(like_count);
 
     const [editing, setEditing] = useState(false);
-    const [editText, setEditText] = useState(originalText);
+    const [editText, setEditText] = useState(text);
     const [saving, setSaving] = useState(false);
     const editRef = useRef(null);
 
@@ -179,20 +180,21 @@ const Post = ({
 
     return (
         <>
-            <Box w="full" mb={6}>
-                <Flex align="center" mb={3}>
-                    <Flex onClick={() => navigate(`/${username}`)} cursor="pointer">
+            <Box w="full">
+                <Flex align="center" mb={3} w="full">
+                    <Flex onClick={() => navigate(`/${username}`)} cursor="pointer" flex="1" minW="0">
                         <Avatar size="md" src={profile_picture || undefined} />
-                        <HStack ml={3} spacing={2}>
+
+                        <VStack align="flex-start" ml={3} flex="1" minW="0">
                             {name && (
-                                <Text fontWeight="bold" color={COLOR_4}>
+                                <Text fontWeight="bold" color={COLOR_4} w="full" isTruncated>
                                     {name}
                                 </Text>
                             )}
-                            <Text fontSize="sm" color={COLOR_4}>
+                            <Text fontSize="sm" color={COLOR_4} whiteSpace="nowrap">
                                 @{username}
                             </Text>
-                        </HStack>
+                        </VStack>
                     </Flex>
                 </Flex>
 
@@ -229,7 +231,7 @@ const Post = ({
                                             right={3}
                                             pointerEvents="none"
                                         >
-                                            {editText.length > 900 ? MAX_CHARS - editText.length : ""}
+                                            {editText.length > MAX_CHARS - 100 ? MAX_CHARS - editText.length : ""}
                                         </Text>
                                     </Box>
                                     <Box display="flex" justifyContent="flex-end">

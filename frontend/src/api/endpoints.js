@@ -4,15 +4,23 @@ import { API_URL } from "../constants/constants.js";
 
 const api = axios.create({ baseURL: API_URL, withCredentials: true });
 
-export const getUserApi = async (username) => {
-    try {
-        const response = await api.get(`/user/${username}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        throw error;
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== "/token/refresh/") {
+            originalRequest._retry = true;
+
+            try {
+                await api.post("/token/refresh/");
+                return api(originalRequest);
+            } catch (refreshErr) {
+                console.error("Token refresh failed:", refreshErr);
+            }
+        }
+        return Promise.reject(error);
     }
-};
+);
 
 export const loginApi = async (username, password) => {
     if (!username || !password) {
@@ -27,6 +35,44 @@ export const loginApi = async (username, password) => {
     }
 };
 
+export const getAuthApi = async () => {
+    try {
+        const response = await api.get("/authenticated/");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching auth data:", error);
+        throw error;
+    }
+};
+
+export const requestPasswordResetApi = async (email) => {
+    await api.post("/password-reset/request/", { email });
+    return { success: true };
+};
+
+export const confirmPasswordResetApi = async (uid, token, newPassword) => {
+    const response = await api.post("/password-reset/confirm/", { uid, token, new_password: newPassword });
+    return response.data;
+};
+
+export const checkUsernameApi = async (username) => {
+    try {
+        const result = await api.get(`/username-exists/`, { params: { username } });
+        return result.data.exists;
+    } catch {
+        return true;
+    }
+};
+
+export const checkEmailApi = async (email) => {
+    try {
+        const result = await api.get(`/email-exists/`, { params: { email } });
+        return result.data.exists;
+    } catch {
+        return true;
+    }
+};
+
 export const registerApi = async (username, name, email, password) => {
     if (!username || !email || !password) {
         return { success: false };
@@ -37,6 +83,41 @@ export const registerApi = async (username, name, email, password) => {
     } catch (error) {
         console.warn("Error during registration:", error);
         return { success: false };
+    }
+};
+
+export const logoutApi = async () => {
+    await api.post("/logout/");
+    return { success: true };
+};
+
+export const getUserApi = async (username) => {
+    try {
+        const response = await api.get(`/user/${username}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        throw error;
+    }
+};
+
+export const getFollowersApi = async (username) => {
+    const res = await api.get(`/followers/${username}/`);
+    return res.data;
+};
+
+export const getFollowingApi = async (username) => {
+    const res = await api.get(`/following/${username}/`);
+    return res.data;
+};
+
+export const followApi = async (username) => {
+    try {
+        const response = await api.post("/follow/", { username: username });
+        return response.data;
+    } catch (error) {
+        console.error("Error following user:", error);
+        throw error;
     }
 };
 
@@ -68,41 +149,6 @@ export const editUserApi = async ({ username, name, bio, imageFile, removedPictu
     }
 };
 
-export const logoutApi = async () => {
-    await api.post("/logout/");
-    return { success: true };
-};
-
-export const getAuthApi = async () => {
-    try {
-        const response = await api.get("/authenticated/");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching auth data:", error);
-        throw error;
-    }
-};
-
-export const meApi = async () => {
-    try {
-        const response = await api.get("/me/");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching user data:", error);
-        throw error;
-    }
-};
-
-export const followApi = async (username) => {
-    try {
-        const response = await api.post("/follow/", { username: username });
-        return response.data;
-    } catch (error) {
-        console.error("Error following user:", error);
-        throw error;
-    }
-};
-
 export const getPostApi = async (id) => {
     try {
         const response = await api.get(`/post/${id}`);
@@ -123,39 +169,6 @@ export const getPostsApi = async (username) => {
     }
 };
 
-export const likeApi = async (postId) => {
-    try {
-        const response = await api.post("/like/", { id: postId });
-        return response.data;
-    } catch (error) {
-        console.error("Error liking post:", error);
-        throw error;
-    }
-};
-
-export const feedApi = async (page = 1) => {
-    const response = await api.get(`/feed/?page=${page}`);
-    return response.data;
-};
-
-export const checkUsernameApi = async (username) => {
-    try {
-        const result = await api.get(`/username-exists/`, { params: { username } });
-        return result.data.exists;
-    } catch {
-        return true;
-    }
-};
-
-export const checkEmailApi = async (email) => {
-    try {
-        const result = await api.get(`/email-exists/`, { params: { email } });
-        return result.data.exists;
-    } catch {
-        return true;
-    }
-};
-
 export const createPostApi = async (imageFile, text) => {
     const formData = new FormData();
     formData.append("text", text);
@@ -168,9 +181,6 @@ export const createPostApi = async (imageFile, text) => {
 };
 
 export const editPostApi = async (id, text) => {
-    if (text === "error") {
-        throw new Error("Simulated error for testing");
-    }
     try {
         const result = await api.post(`/edit-post/${id}/`, { text: text.trim() });
         return result.data;
@@ -190,27 +200,84 @@ export const deletePostApi = async (id) => {
     }
 };
 
-export const requestPasswordResetApi = async (email) => {
-    await api.post("/password-reset/request/", { email });
-    return { success: true };
-};
-
-export const confirmPasswordResetApi = async (uid, token, newPassword) => {
-    const response = await api.post("/password-reset/confirm/", { uid, token, new_password: newPassword });
-    return response.data;
-};
-
-export const getFollowersApi = async (username) => {
-    const res = await api.get(`/followers/${username}/`);
-    return res.data;
-};
-
-export const getFollowingApi = async (username) => {
-    const res = await api.get(`/following/${username}/`);
-    return res.data;
+export const likeApi = async (postId) => {
+    try {
+        const response = await api.post("/like/", { id: postId });
+        return response.data;
+    } catch (error) {
+        console.error("Error liking post:", error);
+        throw error;
+    }
 };
 
 export const getLikersApi = async (id) => {
     const res = await api.get(`/likers/${id}/`);
     return res.data;
+};
+
+export const getCommentsApi = async (id, page = 1) => {
+    try {
+        const response = await api.get(`/comments/${id}/`, { params: { page } });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+        throw error;
+    }
+};
+
+export const createCommentApi = async (postId, text) => {
+    const data = { post_id: postId, text: text.trim() };
+    try {
+        const response = await api.post("/create-comment/", data);
+        return response.data;
+    } catch (error) {
+        console.error("Error creating comment:", error);
+        throw error;
+    }
+};
+
+export const editCommentApi = async (id, text) => {
+    const data = { text: text.trim() };
+    try {
+        const response = await api.post(`/edit-comment/${id}/`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Error editing comment:", error);
+        throw error;
+    }
+};
+
+export const deleteCommentApi = async (id) => {
+    try {
+        await api.delete(`/delete-comment/${id}/`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+        throw error;
+    }
+};
+
+export const likeCommentApi = async (id) => {
+    try {
+        const response = await api.post("/like-comment/", { id });
+        return response.data;
+    } catch (error) {
+        console.error("Error liking comment:", error);
+        throw error;
+    }
+};
+
+export const getCommentLikersApi = async (id) => {
+    try {
+        const response = await api.get(`/comment-likers/${id}/`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching comment likers:", error);
+        throw error;
+    }
+};
+
+export const feedApi = async (page = 1) => {
+    const response = await api.get(`/feed/?page=${page}`);
+    return response.data;
 };

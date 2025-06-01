@@ -143,6 +143,7 @@ const Register = () => {
                                 onChange: handleChange("username"),
                                 onBlur: () => handleBlur("username"),
                             }}
+                            autoComplete="username"
                         />
                         {touched.username && errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
                     </FormControl>
@@ -173,6 +174,7 @@ const Register = () => {
                                 onChange: handleChange("email"),
                                 onBlur: () => handleBlur("email"),
                             }}
+                            autoComplete="email"
                         />
                         {touched.email && errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
                     </FormControl>
@@ -184,6 +186,7 @@ const Register = () => {
                             _hover={{ borderColor: COLOR_3 }}
                             type="password"
                             {...{ value: values.password, onChange: handleChange("password") }}
+                            autoComplete="new-password"
                         />
                         {touched.password && errors.password && <FormErrorMessage>{errors.password}</FormErrorMessage>}
                     </FormControl>
@@ -198,6 +201,7 @@ const Register = () => {
                                 value: values.confirmPassword,
                                 onChange: handleChange("confirmPassword"),
                             }}
+                            autoComplete="new-password"
                         />
                         {touched.confirmPassword && errors.confirmPassword && (
                             <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>

@@ -56,7 +56,7 @@ const CreatePost = ({ onPostCreated }) => {
     }, []);
 
     return (
-        <Flex py={4} mx="auto">
+        <Flex mx="auto">
             <Box w="full">
                 <HStack align="start">
                     <Avatar size="md" src={user?.profile_picture || undefined} />
@@ -88,7 +88,7 @@ const CreatePost = ({ onPostCreated }) => {
                                     right={3}
                                     pointerEvents="none"
                                 >
-                                    {text.length > 900 ? MAX_CHARS - text.length : ""}
+                                    {text.length > MAX_CHARS - 100 ? MAX_CHARS - text.length : ""}
                                 </Text>
                             </Box>
                         </FormControl>
@@ -103,7 +103,7 @@ const CreatePost = ({ onPostCreated }) => {
                                 type="submit"
                                 isDisabled={!text.trim() || text.length > MAX_CHARS}
                             >
-                                o pana
+                                o toki
                             </Button>
                         </HStack>
                     </VStack>

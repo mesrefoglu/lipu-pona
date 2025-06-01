@@ -13,13 +13,13 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from .models import MyUser, Post, Comment
 from .serializers import (
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
     MyUserSerializer,
     BasicUserSerializer,
     UserRegisterSerializer,
     PostSerializer,
     CommentSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
 )
 from backend.utils import frontend_reset_url, normalize_whitespace, normalize_name
 
@@ -82,263 +82,10 @@ class CustomTokenRefreshView(TokenRefreshView):
         return resp
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated]) 
-def GetUserProfile(request, username):    
-    try:
-        user = MyUser.objects.get(username=username)
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=404)
-
-    try:
-        serializer = MyUserSerializer(user, context={'request': request})
-        is_following = request.user in user.followers.all()
-
-        return Response({**serializer.data, 'is_self': request.user.username == username, 'is_following': is_following})
-    except:
-        return Response({"error": "Error serializing user data."}, status=404)
-
-@api_view(['POST'])
-def Register(request):
-    data = request.data.copy()
-    data['first_name'] = normalize_name(data.get('first_name', '')).strip()
-
-    serializer = UserRegisterSerializer(data=data)
-    try:
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"success": True}, status=status.HTTP_201_CREATED)
-    except Exception as exc:
-        print(exc)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def Logout(request):
-    resp = Response({"success": True})
-    resp.set_cookie(
-        key="access_token",
-        value="",
-        httponly=True,
-        secure=True,
-        samesite="None",
-        path="/",
-        max_age=0,
-        expires="Thu, 01 Jan 1970 00:00:00 GMT",
-    )
-    resp.set_cookie(
-        key="refresh_token",
-        value="",
-        httponly=True,
-        secure=True,
-        samesite="None",
-        path="/",
-        max_age=0,
-        expires="Thu, 01 Jan 1970 00:00:00 GMT",
-    )
-    return resp
-
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Authenticated(request):
     serializer = MyUserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def EditUser(request):
-    data = request.data.copy()
-
-    new_password = data.pop("new_password", [None])[0]
-    current_password = data.pop("current_password", [None])[0]
-
-    try:
-        user = MyUser.objects.get(username=request.user.username)
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-    
-    data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
-
-    serializer = MyUserSerializer(user, data, partial=True)
-
-    if not serializer.is_valid():
-        return Response({"error": serializer.errors, "success": False}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if new_password:
-        if not current_password or not user.check_password(current_password):
-            return Response(
-                {"error": "Current password is incorrect."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        user.set_password(new_password)
-        user.save()
-    
-    serializer.save()
-    return Response({"success": True}, status=status.HTTP_200_OK)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def ToggleFollow(request):
-    target_username = request.data.get("username")
-    if not target_username:
-        return Response(
-            {"detail": "username missing"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        target_user = MyUser.objects.get(username=target_username)
-    except MyUser.DoesNotExist:
-        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    try:
-        if request.user in target_user.followers.all():
-            target_user.followers.remove(request.user)
-            following = False
-        else:
-            target_user.followers.add(request.user)
-            following = True
-    except IntegrityError:
-        logger.exception("DB error while toggling follow")
-        return Response(
-            {"detail": "Could not update follow status."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    return Response({"success": True, "following": following})
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def GetPost(request, id):
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=404)
-
-    serializer = PostSerializer(post, context={'request': request})
-
-    data = serializer.data
-    data['is_liked'] = request.user in post.likes.all()
-
-    return Response(data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def GetComments(request, id):
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=404)
-
-    comments_qs = post.comments.all().order_by('-like_count', '-created_at')
-    paginator = Paginator(comments_qs, 5)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    serializer = CommentSerializer(page_obj.object_list, many=True, context={'request': request})
-
-    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def GetPosts(request, username):
-    try:
-        user = MyUser.objects.get(username=username)
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=404)
-    
-    posts = user.posts.all().order_by('-id')
-    serializer = PostSerializer(posts, many=True, context={'request': request})
-
-    data = []
-
-    for post in serializer.data:
-        post['is_liked'] = request.user in Post.objects.get(id=post['id']).likes.all()
-        data.append(post)
-
-    return Response(data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def Feed(request):
-    following = list(request.user.following.all())
-    following.append(request.user)
-    posts_qs = Post.objects.filter(user__in=following).order_by('-id')
-    paginator = Paginator(posts_qs, 10)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-    serializer = PostSerializer(page_obj.object_list, many=True, context={'request': request})
-    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def ToggleLike(request):
-    post_id = request.data.get("id")
-    if not post_id:
-        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.user in post.likes.all():
-        post.likes.remove(request.user)
-        liked = False
-    else:
-        post.likes.add(request.user)
-        liked = True
-
-    return Response({"success": True, "liked": liked})
-
-@api_view(["GET"])
-def UsernameExists(request):
-    username = request.query_params.get("username", "").strip().lower()
-    exists = MyUser.objects.filter(username=username).exists()
-    return Response({"exists": exists})
-
-@api_view(["GET"])
-def EmailExists(request):
-    email = request.query_params.get("email", "").strip().lower()
-    exists = MyUser.objects.filter(email=email).exists()
-    return Response({"exists": exists})
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def CreatePost(request):
-    data = request.data.copy()
-    data['text'] = normalize_whitespace(data.get('text', '')).strip()
-    serializer = PostSerializer(data=request.data, context={'request': request})
-    serializer.is_valid(raise_exception=True)
-    serializer.save(user=request.user)
-
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def EditPost(request, id):
-    post = Post.objects.filter(id=id).first()
-    if not post:
-        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
-    data = request.data.copy()
-    data['text'] = normalize_whitespace(data.get('text', '')).strip()
-    serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
-    serializer.is_valid(raise_exception=True)
-    serializer.save(edited=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def DeletePost(request, id):
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    if post.user != request.user:
-        return Response({"error": "You do not have permission to delete this post."}, status=status.HTTP_403_FORBIDDEN)
-
-    post.delete()
-    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["POST"])
 def PasswordResetRequest(request):
@@ -381,6 +128,74 @@ def PasswordResetConfirm(request):
     return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
+def UsernameExists(request):
+    username = request.query_params.get("username", "").strip().lower()
+    exists = MyUser.objects.filter(username=username).exists()
+    return Response({"exists": exists})
+
+@api_view(["GET"])
+def EmailExists(request):
+    email = request.query_params.get("email", "").strip().lower()
+    exists = MyUser.objects.filter(email=email).exists()
+    return Response({"exists": exists})
+
+@api_view(['POST'])
+def Register(request):
+    data = request.data.copy()
+    data['first_name'] = normalize_name(data.get('first_name', '')).strip()
+
+    serializer = UserRegisterSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"success": True}, status=status.HTTP_201_CREATED)
+    except Exception as exc:
+        print(exc)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def Logout(request):
+    resp = Response({"success": True})
+    resp.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+    resp.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+    return resp
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
+def GetUserProfile(request, username):    
+    try:
+        user = MyUser.objects.get(username=username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+    try:
+        serializer = MyUserSerializer(user, context={'request': request})
+        is_following = request.user in user.followers.all()
+
+        return Response({**serializer.data, 'is_self': request.user.username == username, 'is_following': is_following})
+    except:
+        return Response({"error": "Error serializing user data."}, status=404)
+
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def Followers(request, username):
     try:
@@ -421,6 +236,162 @@ def Following(request, username):
     serializer = BasicUserSerializer(following_qs, many=True, context={"request": request})
     return Response(serializer.data)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ToggleFollow(request):
+    target_username = request.data.get("username")
+    if not target_username:
+        return Response(
+            {"detail": "username missing"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        target_user = MyUser.objects.get(username=target_username)
+    except MyUser.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        if request.user in target_user.followers.all():
+            target_user.followers.remove(request.user)
+            following = False
+        else:
+            target_user.followers.add(request.user)
+            following = True
+    except IntegrityError:
+        logger.exception("DB error while toggling follow")
+        return Response(
+            {"detail": "Could not update follow status."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response({"success": True, "following": following})
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def EditUser(request):
+    data = request.data.copy()
+
+    new_password = data.pop("new_password", [None])[0]
+    current_password = data.pop("current_password", [None])[0]
+
+    try:
+        user = MyUser.objects.get(username=request.user.username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
+
+    serializer = MyUserSerializer(user, data, partial=True)
+
+    if not serializer.is_valid():
+        return Response({"error": serializer.errors, "success": False}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if new_password:
+        if not current_password or not user.check_password(current_password):
+            return Response(
+                {"error": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.set_password(new_password)
+        user.save()
+    
+    serializer.save()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetPost(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
+
+    serializer = PostSerializer(post, context={'request': request})
+
+    data = serializer.data
+    data['is_liked'] = request.user in post.likes.all()
+
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetPosts(request, username):
+    try:
+        user = MyUser.objects.get(username=username)
+    except MyUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+    
+    posts = user.posts.all().order_by('-id')
+    serializer = PostSerializer(posts, many=True, context={'request': request})
+
+    data = []
+
+    for post in serializer.data:
+        post['is_liked'] = request.user in Post.objects.get(id=post['id']).likes.all()
+        data.append(post)
+
+    return Response(data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def CreatePost(request):
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    serializer = PostSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(user=request.user)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def EditPost(request, id):
+    post = Post.objects.filter(id=id).first()
+    if not post:
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(edited=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def DeletePost(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if post.user != request.user:
+        return Response({"error": "You do not have permission to delete this post."}, status=status.HTTP_403_FORBIDDEN)
+
+    post.delete()
+    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ToggleLike(request):
+    post_id = request.data.get("id")
+    if not post_id:
+        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+
+    return Response({"success": True, "liked": liked})
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def Likers(request, id):
@@ -440,3 +411,129 @@ def Likers(request, id):
 
     serializer = BasicUserSerializer(likers_qs, many=True, context={"request": request})
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def GetComments(request, id):
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=404)
+
+    comments_qs = (
+    post.comments
+        .annotate(like_count=Count("likes"))
+        .order_by("-like_count", "-created_at")
+    )
+    
+    paginator = Paginator(comments_qs, 5)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    serializer = CommentSerializer(page_obj.object_list, many=True, context={'request': request})
+
+    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def CreateComment(request):
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    post_id = data.get('post_id')
+
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CommentSerializer(data=data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(user=request.user, post=post)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def EditComment(request, id):
+    try:
+        comment = Comment.objects.get(id=id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if comment.user != request.user:
+        return Response({"error": "You do not have permission to edit this comment."}, status=status.HTTP_403_FORBIDDEN)
+
+    data = request.data.copy()
+    data['text'] = normalize_whitespace(data.get('text', '')).strip()
+    serializer = CommentSerializer(comment, data=data, partial=True, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(edited=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def DeleteComment(request, id):
+    try:
+        comment = Comment.objects.get(id=id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if comment.user != request.user:
+        return Response({"error": "You do not have permission to delete this comment."}, status=status.HTTP_403_FORBIDDEN)
+
+    comment.delete()
+    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ToggleCommentLike(request):
+    comment_id = request.data.get("id")
+    if not comment_id:
+        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        comment = Comment.objects.get(id=comment_id)
+    except Comment.DoesNotExist:
+        return Response({"detail": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user in comment.likes.all():
+        comment.likes.remove(request.user)
+        liked = False
+    else:
+        comment.likes.add(request.user)
+        liked = True
+
+    return Response({"success": True, "liked": liked})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def CommentLikers(request, id):
+    try:
+        comment = Comment.objects.get(id=id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found."}, status=404)
+
+    likers_qs = (
+        comment.likes.all()
+            .annotate(follower_count=Count("followers"))
+            .order_by("-follower_count")
+    )
+    likers_list = list(likers_qs)
+    if request.user in likers_list:
+        likers_list = [request.user] + [u for u in likers_list if u != request.user]
+
+    serializer = BasicUserSerializer(likers_qs, many=True, context={"request": request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def Feed(request):
+    following = list(request.user.following.all())
+    following.append(request.user)
+    posts_qs = Post.objects.filter(user__in=following).order_by('-id')
+    paginator = Paginator(posts_qs, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    serializer = PostSerializer(page_obj.object_list, many=True, context={'request': request})
+    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})

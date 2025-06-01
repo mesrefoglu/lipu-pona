@@ -103,13 +103,13 @@ const EditPost = () => {
                             />
                             <Text
                                 fontSize="xs"
-                                color={text.length === MAX_CHARS ? "red.500" : COLOR_1}
+                                color={text.length === MAX_CHARS ? "red.500" : "orange.500"}
                                 position="absolute"
                                 bottom={2}
                                 right={3}
                                 pointerEvents="none"
                             >
-                                {text.length}/{MAX_CHARS}
+                                {text.length > MAX_CHARS - 100 ? MAX_CHARS - text.length : ""}
                             </Text>
                         </Box>
                     </FormControl>

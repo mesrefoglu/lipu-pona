@@ -164,61 +164,55 @@ const UserProfile = () => {
                 </Box>
 
                 <VStack align="flex-start" flex={1} spacing={4}>
-                    <Flex
-                        direction={{ base: "column", sm: "row" }}
-                        alignItems={{ base: "flex-start", sm: "center" }}
-                        w="full"
-                    >
-                        <Text fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
-                            @{profile.username}
-                        </Text>
+                    <Text fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
+                        @{profile.username}
+                    </Text>
 
-                        {isSelf ? (
-                            <HStack ml={{ base: 0, sm: 4 }} spacing={1} w={{ base: "full", sm: "auto" }}>
-                                <Button
-                                    bg={COLOR_4}
-                                    color={COLOR_1}
-                                    _hover={{ bg: COLOR_3, color: textColor }}
-                                    size="sm"
-                                    borderRadius="md"
-                                    onClick={() => {
-                                        navigate("/account/edit");
-                                    }}
-                                >
-                                    o ante e lipu mi
-                                </Button>
-                                <Button
-                                    bg={"transparent"}
-                                    border={"2px"}
-                                    borderColor={"red.500"}
-                                    color={textColor}
-                                    _hover={{ bg: "red.500" }}
-                                    size="sm"
-                                    ml={{ base: 1, sm: 4 }}
-                                    w={{ base: "auto", sm: "auto" }}
-                                    onClick={() => {
-                                        setConfirmOpen(true);
-                                    }}
-                                >
-                                    o tawa weka
-                                </Button>
-                            </HStack>
-                        ) : (
+                    {isSelf ? (
+                        <HStack spacing={1} w={{ base: "full", sm: "auto" }}>
                             <Button
-                                bg={isFollowing ? "transparent" : COLOR_3}
-                                ml={{ base: 0, sm: 4 }}
-                                w={{ base: "full", sm: "auto" }}
-                                border="2px"
-                                borderColor={isFollowing ? COLOR_3 : "transparent"}
-                                color={textColor}
-                                _hover={isFollowing ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }}
+                                bg={COLOR_4}
+                                color={COLOR_1}
+                                _hover={{ bg: COLOR_3, color: textColor }}
                                 size="sm"
-                                onClick={handleFollowButton}
+                                borderRadius="md"
+                                onClick={() => {
+                                    navigate("/account/edit");
+                                }}
                             >
-                                {isFollowing ? "o kute ala" : "o kute"}
+                                o ante e lipu mi
                             </Button>
-                        )}
-                    </Flex>
+                            <Button
+                                bg={"transparent"}
+                                border={"2px"}
+                                borderColor={"red.500"}
+                                color={textColor}
+                                _hover={{ bg: "red.500" }}
+                                size="sm"
+                                ml={{ base: 1, sm: 4 }}
+                                w={{ base: "auto", sm: "auto" }}
+                                onClick={() => {
+                                    setConfirmOpen(true);
+                                }}
+                            >
+                                o tawa weka
+                            </Button>
+                        </HStack>
+                    ) : (
+                        <Button
+                            bg={isFollowing ? "transparent" : COLOR_3}
+                            ml={{ base: 0, sm: 4 }}
+                            w={{ base: "full", sm: "auto" }}
+                            border="2px"
+                            borderColor={isFollowing ? COLOR_3 : "transparent"}
+                            color={textColor}
+                            _hover={isFollowing ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }}
+                            size="sm"
+                            onClick={handleFollowButton}
+                        >
+                            {isFollowing ? "o kute ala" : "o kute"}
+                        </Button>
+                    )}
 
                     <HStack spacing={6} py={2}>
                         <HStack>
@@ -244,10 +238,10 @@ const UserProfile = () => {
                     </HStack>
 
                     <VStack align="flex-start" spacing={1}>
-                        <Text fontWeight="medium" color={textColor} maxW="container.sm" noOfLines={1}>
+                        <Text fontWeight="medium" color={textColor} maxW="460px">
                             {profile.first_name}
                         </Text>
-                        <Text color={textColor} whiteSpace="pre-wrap">
+                        <Text color={textColor} whiteSpace="pre-wrap" maxW="460px">
                             {profile.bio}
                         </Text>
                     </VStack>
