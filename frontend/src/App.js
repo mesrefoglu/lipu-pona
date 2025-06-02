@@ -16,6 +16,7 @@ import ForgotPassword from "./routes/ForgotPassword.js";
 import ResetPassword from "./routes/ResetPassword.js";
 import Register from "./routes/Register.js";
 import EditUser from "./routes/EditUser.js";
+import Info from "./routes/Info.js";
 
 function App() {
     return (
@@ -100,6 +101,14 @@ function App() {
                                     <PrivateRoute>
                                         <EditUser />
                                     </PrivateRoute>
+                                </Layout>
+                            }
+                        />
+                        <Route
+                            path="/site/info"
+                            element={
+                                <Layout>
+                                    <Info />
                                 </Layout>
                             }
                         />

@@ -3,7 +3,7 @@ import { Flex, HStack, Text } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { FiSearch } from "react-icons/fi";
+import { FiHelpCircle, FiSearch } from "react-icons/fi";
 
 import { COLOR_1, COLOR_3 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
@@ -55,7 +55,7 @@ const Navbar = () => {
                         </MotionBox>
                     )}
                 </AnimatePresence>
-
+                <FiHelpCircle size="40px" onClick={() => navigate("/site/info")} cursor="pointer" />
                 <FiSearch size="40px" onClick={() => setOpen((v) => !v)} cursor="pointer" />
                 <CgProfile size="40px" onClick={goProfile} cursor="pointer" />
             </HStack>
