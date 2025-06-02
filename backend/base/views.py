@@ -69,6 +69,7 @@ class CustomTokenRefreshView(TokenRefreshView):
         try:
             parent_resp = super().post(request, *args, **kwargs)
             access = parent_resp.data["access"]
+            refresh = parent_resp.data.get("refresh")
         except Exception:
             logger.exception("JWT refresh failed")
             return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
@@ -82,6 +83,11 @@ class CustomTokenRefreshView(TokenRefreshView):
             samesite="None",
             path="/",
         )
+        if refresh:                                         
+            resp.set_cookie(
+                "refresh_token", refresh,
+                httponly=True, secure=True, samesite="None", path="/",
+            )
         return resp
 
 @api_view(['GET'])
