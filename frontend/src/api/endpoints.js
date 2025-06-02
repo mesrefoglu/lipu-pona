@@ -159,6 +159,16 @@ export const editUserApi = async ({ username, name, bio, imageFile, removedPictu
     }
 };
 
+export const deleteUserApi = async () => {
+    try {
+        await api.delete("/delete-user/");
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        throw error;
+    }
+};
+
 export const getPostApi = async (id) => {
     try {
         const response = await api.get(`/post/${id}`);

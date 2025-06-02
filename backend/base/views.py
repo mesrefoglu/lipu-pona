@@ -27,6 +27,7 @@ from .pagination import FeedCursorPagination, CommentCursorPagination
 from backend.utils import frontend_reset_url, normalize_whitespace, normalize_name
 
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -320,6 +321,46 @@ def EditUser(request):
     
     serializer.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def DeleteUser(request):
+    user = request.user
+
+    resp = Response({"success": True})
+    resp.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+    resp.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=0,
+        expires="Thu, 01 Jan 1970 00:00:00 GMT",
+    )
+
+    media_root = settings.MEDIA_ROOT
+    id_fragment = f"_{user.id}_"
+    for root, _, files in os.walk(media_root):
+        for filename in files:
+            if id_fragment in filename:
+                try:
+                    os.remove(os.path.join(root, filename))
+                except Exception:
+                    logger.exception("Could not delete media file")
+
+    user.delete()
+    return resp
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

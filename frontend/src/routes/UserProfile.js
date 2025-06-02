@@ -58,7 +58,7 @@ const UserProfile = () => {
     const [usersInModal, setUsersInModal] = useState([]);
 
     const openFollowers = async () => {
-        setUsersModalTitle(t("followers"));
+        setUsersModalTitle(t("followers_capitalized"));
         setUsersModalOpen(true);
         setUsersModalLoading(true);
         try {
@@ -70,7 +70,7 @@ const UserProfile = () => {
     };
 
     const openFollowing = async () => {
-        setUsersModalTitle(t("following"));
+        setUsersModalTitle(t("following_capitalized"));
         setUsersModalOpen(true);
         setUsersModalLoading(true);
         try {
