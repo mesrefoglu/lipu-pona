@@ -16,13 +16,15 @@ import { FiSend } from "react-icons/fi";
 import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { createCommentApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 250;
 
-const CreatePost = ({ onPostCreated }) => {
+const CreateComment = ({ onCommentCreated }) => {
     const { user } = useAuth();
+    const { t } = useLang();
 
     const [text, setText] = useState("");
     const [error, setError] = useState("");
@@ -39,11 +41,11 @@ const CreatePost = ({ onPostCreated }) => {
         e.preventDefault();
         try {
             const res = await createCommentApi(postId, text.trim());
-            if (onPostCreated) onPostCreated(res);
+            if (onCommentCreated) onCommentCreated(res);
             setText("");
             setError("");
         } catch {
-            setError("pilin ike: post li ken ala kama.");
+            setError(t("create_error"));
         }
     };
 
@@ -71,7 +73,7 @@ const CreatePost = ({ onPostCreated }) => {
                             <Box w="full">
                                 <Textarea
                                     value={text}
-                                    placeholder="o toki e ijo..."
+                                    placeholder={t("create_placeholder")}
                                     onChange={handleTextChange}
                                     ref={textInputRef}
                                     p={0}
@@ -106,7 +108,7 @@ const CreatePost = ({ onPostCreated }) => {
                             type="submit"
                             isDisabled={!text.trim() || text.length > MAX_CHARS}
                         >
-                            o toki
+                            {t("create_button")}
                         </Button>
                     </VStack>
                 </HStack>
@@ -115,4 +117,4 @@ const CreatePost = ({ onPostCreated }) => {
     );
 };
 
-export default CreatePost;
+export default CreateComment;

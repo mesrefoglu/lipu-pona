@@ -19,6 +19,7 @@ import { FiImage, FiSend, FiX } from "react-icons/fi";
 import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { createPostApi } from "../api/endpoints.js";
 
@@ -26,6 +27,7 @@ const MAX_CHARS = 1000;
 
 const CreatePost = ({ onPostCreated }) => {
     const { user } = useAuth();
+    const { t } = useLang();
 
     const [text, setText] = useState("");
     const [imageFile, setImageFile] = useState(null);
@@ -51,7 +53,7 @@ const CreatePost = ({ onPostCreated }) => {
             setImageFile(jpgFile);
             setError("");
         } catch {
-            setError("sitelen musi li ike! compression failed.");
+            setError(t("image_error"));
         }
     };
 
@@ -67,7 +69,7 @@ const CreatePost = ({ onPostCreated }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!text.trim()) {
-            setError("sitelen nimi li ike.");
+            setError(t("post_text_error"));
             return;
         }
         try {
@@ -77,7 +79,7 @@ const CreatePost = ({ onPostCreated }) => {
             clearFile();
             setError("");
         } catch {
-            setError("pilin ike: post li ken ala kama.");
+            setError(t("post_error"));
         }
     };
 
@@ -105,7 +107,7 @@ const CreatePost = ({ onPostCreated }) => {
                             <Box position="relative" w="full">
                                 <Textarea
                                     value={text}
-                                    placeholder="o toki e ijo..."
+                                    placeholder={t("create_placeholder")}
                                     onChange={handleTextChange}
                                     ref={textInputRef}
                                     rows={1}
@@ -166,7 +168,7 @@ const CreatePost = ({ onPostCreated }) => {
                                     borderColor={COLOR_3}
                                     _hover={{ bg: COLOR_3 }}
                                 >
-                                    {imageFile ? "o ante e sitelen ni" : "sitelen musi"}
+                                    {imageFile ? t("change_image") : t("add_image")}
                                 </Button>
                             </FormControl>
 
@@ -179,7 +181,7 @@ const CreatePost = ({ onPostCreated }) => {
                                 type="submit"
                                 isDisabled={!text.trim() || text.length > MAX_CHARS}
                             >
-                                o pana
+                                {t("create_button")}
                             </Button>
                         </HStack>
                     </VStack>

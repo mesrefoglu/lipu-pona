@@ -16,6 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { useLang } from "../contexts/useLang.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { getPostApi, editPostApi } from "../api/endpoints.js";
 
@@ -24,6 +25,7 @@ const MAX_CHARS = 1000;
 const EditPost = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useLang();
 
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(true);
@@ -36,13 +38,13 @@ const EditPost = () => {
                 const post = await getPostApi(id);
                 setText(post.text);
             } catch {
-                setError("pilin ike: sitelen li ken ala kama.");
+                setError(t("load_error"));
             } finally {
                 setLoading(false);
             }
         };
         load();
-    }, [id]);
+    }, [id, t]);
 
     const handleTextChange = (e) => {
         setText(e.target.value.slice(0, MAX_CHARS));
@@ -51,7 +53,7 @@ const EditPost = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!text.trim()) {
-            setError("sitelen nimi li wile.");
+            setError(t("post_text_required"));
             return;
         }
         setSaving(true);
@@ -59,7 +61,7 @@ const EditPost = () => {
             const res = await editPostApi(id, text.trim());
             navigate(`/post/${res.id}`);
         } catch {
-            setError("pilin ike: post li ken ala ante.");
+            setError(t("edit_error"));
         } finally {
             setSaving(false);
         }
@@ -78,7 +80,7 @@ const EditPost = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit}>
                     <Heading size="lg" textAlign="center" color={COLOR_1}>
-                        o ante e sitelen
+                        {t("edit_post_heading")}
                     </Heading>
 
                     {error && (
@@ -89,7 +91,7 @@ const EditPost = () => {
                     )}
 
                     <FormControl id="text" isRequired>
-                        <FormLabel color={COLOR_1}>sitelen nimi (≤ 1000)</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("post_text_label")}</FormLabel>
                         <Box position="relative" w="full">
                             <Textarea
                                 value={text}
@@ -124,7 +126,7 @@ const EditPost = () => {
                         isLoading={saving}
                         isDisabled={!text.trim() || text.length > MAX_CHARS}
                     >
-                        o ante
+                        {t("edit")}
                     </Button>
                 </VStack>
             </Box>

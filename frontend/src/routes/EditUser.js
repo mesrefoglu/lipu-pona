@@ -23,6 +23,7 @@ import { FiUpload, FiX } from "react-icons/fi";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { checkUsernameApi, editUserApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 250;
@@ -30,44 +31,43 @@ const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
 const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW ]{0,50}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-const checkForLength = (str, min, max) => {
-    return str.length >= min && str.length <= max;
-};
+const checkForLength = (str, min, max) => str.length >= min && str.length <= max;
 
-const getErrors = (fields, usernameTaken) => ({
+const getErrors = (fields, usernameTaken, t) => ({
     username: !fields.username
-        ? "nimi lipu li wile."
+        ? t("username_required")
         : !checkForLength(fields.username, 3, 20)
-        ? "nimi ilo li wile ja e 3-20 sitelen."
+        ? t("username_length")
         : !usernameRegex.test(fields.username)
-        ? "nimi lipu li wile ja e sitelen a-z, A-Z, 0-9."
+        ? t("username_invalid_chars")
         : usernameTaken
-        ? "nimi lipu ni li lon. o ante."
+        ? t("username_taken")
         : "",
     name: !checkForLength(fields.name, 0, 50)
-        ? "nimi li wile ja e 0-50 sitelen."
+        ? t("name_length")
         : !nameRegex.test(fields.name)
-        ? "nimi li wile ja e sitelen pi toki pona."
+        ? t("name_invalid_chars")
         : "",
-    currentPassword: fields.newPassword && !fields.currentPassword ? "nimi len pi tenpo ni li wile." : "",
+    currentPassword: fields.newPassword && !fields.currentPassword ? t("current_password_required") : "",
     newPassword: !fields.newPassword
         ? ""
         : !checkForLength(fields.newPassword, 8, 100)
-        ? "nimi len li wile ja e 8-100 sitelen."
+        ? t("new_password_length")
         : !passwordRegex.test(fields.newPassword)
-        ? "nimi len li wile ja e sitelen wan. ni li wile ja sitelen nanpa wan kin."
+        ? t("new_password_complexity")
         : "",
     confirmPassword:
         fields.newPassword && !fields.confirmPassword
-            ? "o pana e nimi len a."
+            ? t("confirm_password_required")
             : fields.confirmPassword !== fields.newPassword
-            ? "nimi len li sama ala."
+            ? t("confirm_password_mismatch")
             : "",
 });
 
 const EditUser = () => {
     const fileInputRef = useRef();
     const { user, setUser, authLogin } = useAuth();
+    const { t } = useLang();
     const toast = useToast();
     const originalUsername = useRef(user?.username || "").current;
     const navigate = useNavigate();
@@ -89,7 +89,7 @@ const EditUser = () => {
     const [usernameTaken, setUsernameTaken] = useState(false);
     const [error, setError] = useState("");
 
-    const errors = getErrors(values, usernameTaken);
+    const errors = getErrors(values, usernameTaken, t);
     const hasErrors = Object.values(errors).some(Boolean);
 
     const handleChange = (field) => (e) => {
@@ -112,15 +112,13 @@ const EditUser = () => {
                 useWebWorker: true,
                 fileType: "image/jpeg",
             });
-            const jpgFile = new File([blob], "img.jpg", {
-                type: "image/jpeg",
-            });
+            const jpgFile = new File([blob], "img.jpg", { type: "image/jpeg" });
             setImageFile(jpgFile);
             setPreviewSrc(URL.createObjectURL(jpgFile));
             setRemovedPicture(false);
             setError("");
         } catch {
-            setError("sitelen musi li ike! compression failed.");
+            setError(t("image_error"));
         }
     };
 
@@ -132,7 +130,7 @@ const EditUser = () => {
     };
 
     const handleBlur = async (field) => {
-        setTouched((t) => ({ ...t, [field]: true }));
+        setTouched((tState) => ({ ...tState, [field]: true }));
         if (
             field === "username" &&
             values.username &&
@@ -155,7 +153,8 @@ const EditUser = () => {
         });
         setError("");
         if (hasErrors) return;
-        const { success, error } = await editUserApi({
+
+        const { success, error: apiError } = await editUserApi({
             username: values.username,
             name: values.name,
             bio: values.bio,
@@ -166,10 +165,10 @@ const EditUser = () => {
         });
 
         if (!success) {
-            if (error === "Current password is incorrect.") {
-                setError("nimi len pi tenpo ni li ike.");
+            if (apiError === "Current password is incorrect.") {
+                setError(t("current_password_incorrect"));
             } else {
-                setError("pilin ike: o pali sin.");
+                setError(t("update_error_generic"));
             }
             return;
         }
@@ -182,7 +181,7 @@ const EditUser = () => {
         navigate(`/${values.username}`);
 
         toast({
-            description: "Ala li pona!",
+            description: t("update_success"),
             placement: "top",
             status: "success",
             duration: 5000,
@@ -194,15 +193,14 @@ const EditUser = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit}>
                     <Heading size="lg" textAlign="center" color={COLOR_1}>
-                        o ante e lipu mi
+                        {t("edit_profile_heading")}
                     </Heading>
 
                     <FormControl id="username" isInvalid={touched.username && !!errors.username}>
-                        <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("username_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
-                            type="text"
                             value={values.username}
                             onChange={handleChange("username")}
                             onBlur={() => handleBlur("username")}
@@ -211,11 +209,10 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="name" isInvalid={touched.name && !!errors.name}>
-                        <FormLabel color={COLOR_1}>nimi</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("name_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
-                            type="text"
                             value={values.name}
                             onChange={handleChange("name")}
                             onBlur={() => handleBlur("name")}
@@ -224,7 +221,7 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="bio">
-                        <FormLabel color={COLOR_1}>sona mi</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("bio_label")}</FormLabel>
                         <Box position="relative" w="full">
                             <Textarea
                                 value={values.bio}
@@ -251,7 +248,7 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="profile_picture">
-                        <FormLabel color={COLOR_1}>sitelen mi</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("profile_picture_label")}</FormLabel>
                         <input
                             type="file"
                             accept=".jpg, .jpeg, .png, .webp, .bmp"
@@ -266,7 +263,7 @@ const EditUser = () => {
                             color={COLOR_4}
                             _hover={{ bg: "teal" }}
                         >
-                            {previewSrc ? "o ante e sitelen ni" : "o pana e sitelen"}
+                            {previewSrc ? t("change_image_button") : t("upload_image_button")}
                         </Button>
 
                         {previewSrc && (
@@ -287,7 +284,7 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="newPassword" isInvalid={touched.newPassword && !!errors.newPassword}>
-                        <FormLabel color={COLOR_1}>nimi len sin</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("new_password_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -303,7 +300,7 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="confirmPassword" isInvalid={touched.confirmPassword && !!errors.confirmPassword}>
-                        <FormLabel color={COLOR_1}>nimi len sin a</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("confirm_password_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -319,7 +316,7 @@ const EditUser = () => {
                     </FormControl>
 
                     <FormControl id="currentPassword" isInvalid={touched.currentPassword && !!errors.currentPassword}>
-                        <FormLabel color={COLOR_1}>nimi len pi tenpo ni</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("current_password_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -351,7 +348,7 @@ const EditUser = () => {
                         type="submit"
                         isDisabled={hasErrors || usernameTaken}
                     >
-                        o pana
+                        {t("save_button")}
                     </Button>
                 </VStack>
             </Box>

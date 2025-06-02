@@ -104,7 +104,7 @@ const SinglePost = () => {
 
                 <Box mt={4} mb={6}>
                     <CreateComment
-                        onPostCreated={(newComment) => {
+                        onCommentCreated={(newComment) => {
                             setComments((prev) => [newComment, ...prev]);
                         }}
                     />

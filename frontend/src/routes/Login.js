@@ -17,6 +17,7 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 
 const Login = () => {
     const [username, setUsername] = useState("");
@@ -24,6 +25,7 @@ const Login = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { authLogin } = useAuth();
+    const { t } = useLang();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -32,7 +34,7 @@ const Login = () => {
             const me = await authLogin(username, password);
             navigate(`/${me.username}`);
         } catch {
-            setError("nimi lipu anu nimi len li suli");
+            setError(t("login_error"));
         }
     };
 
@@ -41,7 +43,7 @@ const Login = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} onSubmit={handleSubmit} w="full">
                     <Heading size="lg" color={COLOR_1} textAlign="center">
-                        o kama lon insa
+                        {t("login_heading")}
                     </Heading>
 
                     {error && (
@@ -52,7 +54,7 @@ const Login = () => {
                     )}
 
                     <FormControl id="username">
-                        <FormLabel color={COLOR_1}>nimi lipu</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("username_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -64,7 +66,7 @@ const Login = () => {
                     </FormControl>
 
                     <FormControl id="password">
-                        <FormLabel color={COLOR_1}>nimi len</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("password_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -82,7 +84,7 @@ const Login = () => {
                         to="/account/forgot-password"
                         alignSelf="flex-start"
                     >
-                        mi pini sona e nimi len.
+                        {t("forgot_password_link")}
                     </Link>
 
                     <Button
@@ -95,13 +97,13 @@ const Login = () => {
                         type="submit"
                         isDisabled={!username || !password}
                     >
-                        o pana
+                        {t("login_button")}
                     </Button>
 
                     <Text fontSize="sm" color={COLOR_1}>
-                        sina sin anu seme?{" "}
+                        {t("signup_prompt")}{" "}
                         <Link color="blue.500" as={RouterLink} to="/account/register">
-                            o pana e lipu sin
+                            {t("signup_link")}
                         </Link>
                         .
                     </Text>

@@ -138,9 +138,9 @@ const Comment = ({
         setSaving(true);
         try {
             await editCommentApi(id, newText);
-            toast({ description: "sitelen toki li ante!", status: "success", duration: 2000 });
+            toast({ description: t("edit_success"), status: "success", duration: 2000 });
         } catch {
-            toast({ description: "pilin ike: toki li ken ala ante.", status: "error", duration: 2000 });
+            toast({ description: t("edit_error"), status: "error", duration: 2000 });
             setDisplayText(lastText);
             setEdited(wasEdited);
             setEditing(true);
@@ -150,14 +150,15 @@ const Comment = ({
     };
 
     const handleDelete = () => setConfirmOpen(true);
+
     const onConfirmDelete = async () => {
         try {
             await deleteCommentApi(id);
             setConfirmOpen(false);
-            toast({ description: "toki li pakala!", status: "success", duration: 2000 });
+            toast({ description: t("delete_success"), status: "success", duration: 2000 });
             if (onDelete) onDelete(id);
         } catch {
-            toast({ description: "pilin ike: toki li ken ala pakala.", status: "error", duration: 2000 });
+            toast({ description: t("delete_error"), status: "error", duration: 2000 });
         }
     };
 
@@ -271,9 +272,9 @@ const Comment = ({
                 isOpen={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onConfirmDelete}
-                title="o weka ala weka toki ni anu?"
-                description="sina ken ala e tawa monsi."
-                confirmText="o weka"
+                title={t("confirm_delete_title")}
+                description={t("confirm_delete_description")}
+                confirmText={t("confirm_delete_confirm")}
                 cancelText={t("no")}
                 headerTextColor={COLOR_1}
                 bodyTextColor={COLOR_1}
@@ -285,7 +286,7 @@ const Comment = ({
                 isOpen={likersOpen}
                 onClose={() => setLikersOpen(false)}
                 users={likers}
-                title="jan olin e toki ni"
+                title={t("likers_title")}
                 loading={likersLoading}
             />
         </>

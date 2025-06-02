@@ -17,6 +17,7 @@ import { useParams } from "react-router-dom";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { confirmPasswordResetApi } from "../api/endpoints.js";
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
@@ -24,6 +25,7 @@ const ResetPassword = () => {
     const { uid, token } = useParams();
     const { authLogin } = useAuth();
     const toast = useToast();
+    const { t } = useLang();
 
     const [values, setValues] = useState({ newPassword: "", confirmPassword: "" });
     const [touched, setTouched] = useState({});
@@ -32,16 +34,17 @@ const ResetPassword = () => {
 
     const errors = {
         newPassword: !values.newPassword
-            ? "nimi len li wile."
+            ? t("register_password_required")
             : !passwordRegex.test(values.newPassword)
-            ? "nimi len sina li wile lon suli 8 sitelen."
+            ? t("register_password_length")
             : "",
         confirmPassword: !values.confirmPassword
-            ? "o pana e nimi len a."
+            ? t("register_confirm_required")
             : values.newPassword !== values.confirmPassword
-            ? "nimi len li sama ala."
+            ? t("register_confirm_mismatch")
             : "",
     };
+
     const hasErrors = Object.values(errors).some(Boolean);
 
     const handleChange = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
@@ -56,14 +59,14 @@ const ResetPassword = () => {
             const { username } = await confirmPasswordResetApi(uid, token, values.newPassword);
             await authLogin(username, values.newPassword);
             toast({
-                description: "nimi len li ante.",
+                description: t("reset_success"),
                 status: "success",
                 duration: 10000,
                 position: "top",
                 isClosable: true,
             });
         } catch {
-            setError("pilin ike: lipu ni li suli ala.");
+            setError(t("reset_error"));
         } finally {
             setLoading(false);
         }
@@ -74,7 +77,7 @@ const ResetPassword = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit}>
                     <Heading size="lg" textAlign="center" color={COLOR_1}>
-                        o ante e nimi len
+                        {t("reset_heading")}
                     </Heading>
 
                     {error && (
@@ -85,7 +88,7 @@ const ResetPassword = () => {
                     )}
 
                     <FormControl id="newPassword" isInvalid={touched.newPassword && !!errors.newPassword}>
-                        <FormLabel color={COLOR_1}>nimi len sin</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("password_label_new")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -100,7 +103,7 @@ const ResetPassword = () => {
                     </FormControl>
 
                     <FormControl id="confirmPassword" isInvalid={touched.confirmPassword && !!errors.confirmPassword}>
-                        <FormLabel color={COLOR_1}>nimi len sin a</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("confirm_password_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -125,7 +128,7 @@ const ResetPassword = () => {
                         isDisabled={hasErrors}
                         isLoading={loading}
                     >
-                        o pana
+                        {t("register_button")}
                     </Button>
                 </VStack>
             </Box>

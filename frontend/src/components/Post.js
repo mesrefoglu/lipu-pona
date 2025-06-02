@@ -22,6 +22,7 @@ import { FaHeart, FaRegHeart, FaRegComment, FaShare, FaEdit, FaTrash } from "rea
 import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { BASE_URL, COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { likeApi, getLikersApi, editPostApi, deletePostApi } from "../api/endpoints.js";
 import ConfirmDialog from "./ConfirmDialogue.js";
@@ -61,6 +62,7 @@ const Post = ({
     const toast = useToast();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useLang();
 
     const [displayText, setDisplayText] = useState(text);
     const [edited, setEdited] = useState(originalEdited);
@@ -126,7 +128,7 @@ const Post = ({
         const url = `${BASE_URL}/post/${id}`;
         navigator.clipboard.writeText(url).then(() => {
             toast({
-                description: "Nasin tawa li kama sama!",
+                description: t("share_success"),
                 status: "success",
                 duration: 2000,
             });
@@ -151,9 +153,9 @@ const Post = ({
         setSaving(true);
         try {
             await editPostApi(id, newText);
-            toast({ description: "sitelen li ante!", status: "success", duration: 2000 });
+            toast({ description: t("edit_success"), status: "success", duration: 2000 });
         } catch {
-            toast({ description: "pilin ike: sitelen li ken ala ante.", status: "error", duration: 2000 });
+            toast({ description: t("edit_error"), status: "error", duration: 2000 });
             setEditing(true);
             setDisplayText(lastText);
             setEdited(wasEdited);
@@ -168,11 +170,11 @@ const Post = ({
         try {
             await deletePostApi(id);
             setConfirmOpen(false);
-            toast({ description: "sitelen li pakala!", status: "success", duration: 2000 });
+            toast({ description: t("delete_success"), status: "success", duration: 2000 });
             if (onDelete) onDelete(id);
             else navigate(`/${username}`);
         } catch {
-            toast({ description: "pilin ike: post li ken ala pakala", status: "error", duration: 2000 });
+            toast({ description: t("delete_error"), status: "error", duration: 2000 });
         } finally {
             setDeleting(false);
         }
@@ -184,7 +186,6 @@ const Post = ({
                 <Flex align="center" mb={3} w="full">
                     <Flex onClick={() => navigate(`/${username}`)} cursor="pointer" w="auto" align="center">
                         <Avatar size="md" src={profile_picture || undefined} />
-
                         <VStack align="flex-start" ml={3} flex="1" minW="0">
                             {name && (
                                 <Text fontWeight="bold" color={COLOR_4} w="full" isTruncated>
@@ -246,7 +247,7 @@ const Post = ({
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={onSubmit}
                                         >
-                                            o ante
+                                            {t("edit")}
                                         </Button>
                                     </Box>
                                 </>
@@ -259,7 +260,7 @@ const Post = ({
 
                 {edited && !editing && (
                     <Text fontSize="xs" color={COLOR_4} mb={2}>
-                        (jan li ante e lipu ni)
+                        ({t("post_edited")})
                     </Text>
                 )}
 
@@ -276,14 +277,14 @@ const Post = ({
                 <Divider mb={2} />
 
                 <HStack spacing={0}>
-                    <ActionButton icon={liked ? FaHeart : FaRegHeart} onClick={handleLike} />
+                    <ActionButton icon={liked ? FaHeart : FaRegHeart} onClick={handleLike} active={liked} />
                     <Text color={COLOR_4} cursor="pointer" onClick={openLikers} pl={2} pr={4}>
-                        {likes} ijo olin
+                        {likes} {t("likes")}
                     </Text>
 
                     <ActionButton icon={FaRegComment} onClick={() => navigate(`/post/${id}`)} />
                     <Text color={COLOR_4} cursor="pointer" onClick={() => navigate(`/post/${id}`)} pl={2} pr={4}>
-                        {comment_count} ijo toki
+                        {comment_count} {t("comments")}
                     </Text>
 
                     <ActionButton icon={FaShare} onClick={handleShare} />
@@ -301,10 +302,10 @@ const Post = ({
                 isOpen={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onConfirmDelete}
-                title="o weka ala weka e pana ni anu?"
-                description="sina ken ala e tawa monsi."
-                confirmText="o weka"
-                cancelText="ala"
+                title={t("confirm_delete_title_post")}
+                description={t("confirm_delete_description")}
+                confirmText={t("confirm_delete_confirm")}
+                cancelText={t("no")}
                 headerTextColor={COLOR_1}
                 bodyTextColor={COLOR_1}
                 cancelButtonColorScheme="gray"
@@ -315,7 +316,7 @@ const Post = ({
                 isOpen={likersOpen}
                 onClose={() => setLikersOpen(false)}
                 users={likers}
-                title="jan olin e pana ni"
+                title={t("likers_title_post")}
                 loading={likersLoading}
             />
         </>

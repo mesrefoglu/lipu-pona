@@ -15,12 +15,15 @@ import {
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { useLang } from "../contexts/useLang.js";
 import { requestPasswordResetApi } from "../api/endpoints.js";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ForgotPassword = () => {
     const toast = useToast();
+    const { t } = useLang();
+
     const [email, setEmail] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -31,14 +34,14 @@ const ForgotPassword = () => {
         e.preventDefault();
         setError("");
         if (!emailRegex.test(email)) {
-            setError("o pana e lipu toki ilo pona.");
+            setError(t("email_invalid"));
             return;
         }
         setLoading(true);
         await requestPasswordResetApi(email);
         setLoading(false);
         toast({
-            description: "a. mi pana e lipu ilo tawa sina.",
+            description: t("email_sent"),
             status: "success",
             duration: 10000,
             position: "top",
@@ -52,7 +55,7 @@ const ForgotPassword = () => {
             <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                 <VStack as="form" spacing={6} onSubmit={handleSubmit} w="full">
                     <Heading size="lg" color={COLOR_1} textAlign="center">
-                        mi pini sona e nimi len
+                        {t("forgot_heading")}
                     </Heading>
 
                     {error && (
@@ -63,7 +66,7 @@ const ForgotPassword = () => {
                     )}
 
                     <FormControl id="email">
-                        <FormLabel color={COLOR_1}>lipu toki ilo</FormLabel>
+                        <FormLabel color={COLOR_1}>{t("email_label")}</FormLabel>
                         <Input
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
@@ -84,11 +87,11 @@ const ForgotPassword = () => {
                         isDisabled={hasErrors}
                         isLoading={loading}
                     >
-                        o pana e lipu ilo
+                        {t("send_email_button")}
                     </Button>
 
                     <Link fontSize="sm" color="blue.500" as={RouterLink} to="/account/login">
-                        o kama lon insa.
+                        {t("back_to_login")}
                     </Link>
                 </VStack>
             </Box>
