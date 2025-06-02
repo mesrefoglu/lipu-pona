@@ -10,7 +10,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from .models import MyUser, Post, Comment
@@ -181,6 +181,20 @@ def Logout(request):
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
     )
     return resp
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def SearchUsers(request):
+    query = request.query_params.get('q', '').strip()
+    if not query:
+        return Response([], status=status.HTTP_200_OK)
+    users = (
+        MyUser.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query))
+        .annotate(follower_count=Count('followers'))
+        .order_by('-follower_count', '-id')[:7]
+    )
+    serializer = BasicUserSerializer(users, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) 

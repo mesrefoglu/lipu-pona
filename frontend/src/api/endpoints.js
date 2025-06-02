@@ -91,6 +91,16 @@ export const logoutApi = async () => {
     return { success: true };
 };
 
+export const searchUsersApi = async (query) => {
+    if (!query) return [];
+    try {
+        const res = await api.get("/search-users/", { params: { q: query } });
+        return res.data;
+    } catch {
+        return [];
+    }
+};
+
 export const getUserApi = async (username) => {
     try {
         const response = await api.get(`/user/${username}`);

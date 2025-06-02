@@ -201,7 +201,6 @@ const UserProfile = () => {
                     ) : (
                         <Button
                             bg={isFollowing ? "transparent" : COLOR_3}
-                            ml={{ base: 0, sm: 4 }}
                             w={{ base: "full", sm: "auto" }}
                             border="2px"
                             borderColor={isFollowing ? COLOR_3 : "transparent"}
