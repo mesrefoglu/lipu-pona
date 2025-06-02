@@ -59,8 +59,8 @@ const CreatePost = ({ onPostCreated }) => {
         <Flex mx="auto">
             <Box w="full">
                 <HStack align="start">
-                    <Avatar size="md" src={user?.profile_picture || undefined} />
-                    <VStack w="full" ml={2} spacing={2} as="form" onSubmit={handleSubmit}>
+                    <Avatar size="sm" src={user?.profile_picture || undefined} />
+                    <VStack w="full" ml={2} spacing={2} as="form" onSubmit={handleSubmit} align="start">
                         {error && (
                             <Alert status="error" rounded="md" w="full">
                                 <AlertIcon />
@@ -93,20 +93,21 @@ const CreatePost = ({ onPostCreated }) => {
                                 </Text>
                             </Box>
                         </FormControl>
-
-                        <HStack w="full">
-                            <Button
-                                leftIcon={<FiSend />}
-                                rounded="lg"
-                                bg={COLOR_3}
-                                color={COLOR_4}
-                                _hover={{ bg: "teal" }}
-                                type="submit"
-                                isDisabled={!text.trim() || text.length > MAX_CHARS}
-                            >
-                                o toki
-                            </Button>
-                        </HStack>
+                        <Button
+                            leftIcon={<FiSend size={"12px"} />}
+                            rounded="lg"
+                            px={1}
+                            py={0}
+                            bg={COLOR_3}
+                            float="left"
+                            color={COLOR_4}
+                            fontSize={"sm"}
+                            _hover={{ bg: "teal" }}
+                            type="submit"
+                            isDisabled={!text.trim() || text.length > MAX_CHARS}
+                        >
+                            o toki
+                        </Button>
                     </VStack>
                 </HStack>
             </Box>

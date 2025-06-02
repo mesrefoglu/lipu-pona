@@ -182,7 +182,7 @@ const Post = ({
         <>
             <Box w="full">
                 <Flex align="center" mb={3} w="full">
-                    <Flex onClick={() => navigate(`/${username}`)} cursor="pointer" flex="1" minW="0">
+                    <Flex onClick={() => navigate(`/${username}`)} cursor="pointer" w="auto" align="center">
                         <Avatar size="md" src={profile_picture || undefined} />
 
                         <VStack align="flex-start" ml={3} flex="1" minW="0">

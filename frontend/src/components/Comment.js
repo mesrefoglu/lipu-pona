@@ -20,6 +20,7 @@ import { FaHeart, FaRegHeart, FaEdit, FaTrash } from "react-icons/fa";
 import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { likeCommentApi, getCommentLikersApi, editCommentApi, deleteCommentApi } from "../api/endpoints.js";
 import ConfirmDialog from "./ConfirmDialogue.js";
@@ -57,6 +58,7 @@ const Comment = ({
     const toast = useToast();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useLang();
 
     const [displayText, setDisplayText] = useState(text);
     const [edited, setEdited] = useState(is_edited);
@@ -163,8 +165,8 @@ const Comment = ({
         <>
             <Box w="full">
                 <Flex align="center" w="full">
-                    <HStack w="full" spacing={3} cursor="pointer" onClick={() => navigate(`/${username}`)}>
-                        <Avatar size="md" src={profile_picture || undefined} flexShrink={0} />
+                    <HStack spacing={3} cursor="pointer" onClick={() => navigate(`/${username}`)}>
+                        <Avatar size="sm" src={profile_picture || undefined} flexShrink={0} />
 
                         <VStack align="start" flex="1" minW="0" spacing={0}>
                             <HStack w="full" spacing={1}>
@@ -181,9 +183,9 @@ const Comment = ({
                                 </Text>
                             </HStack>
 
-                            <Text fontSize="xs" color={COLOR_4} mb={2}>
+                            <Text fontSize="xs" color={COLOR_4}>
                                 {formatted_date}
-                                {edited && !editing && " 🞄 (jan li ante e toki ni)"}
+                                {edited && !editing && ` 🞄 (${t("comment_edited")})`}
                             </Text>
                         </VStack>
                     </HStack>
@@ -238,7 +240,7 @@ const Comment = ({
                                             onClick={onSubmit}
                                             size="sm"
                                         >
-                                            o ante
+                                            {t("edit")}
                                         </Button>
                                     </Box>
                                 </>
@@ -252,7 +254,7 @@ const Comment = ({
                 <HStack spacing={0}>
                     <ActionButton icon={liked ? FaHeart : FaRegHeart} onClick={handleLike} active={liked} />
                     <Text color={COLOR_4} cursor="pointer" onClick={openLikers} pl={2} pr={4} fontSize="sm">
-                        {likes} ijo olin
+                        {likes} {t("likes")}
                     </Text>
                     <Spacer />
                     {is_mine && (
@@ -272,7 +274,7 @@ const Comment = ({
                 title="o weka ala weka toki ni anu?"
                 description="sina ken ala e tawa monsi."
                 confirmText="o weka"
-                cancelText="ala"
+                cancelText={t("no")}
                 headerTextColor={COLOR_1}
                 bodyTextColor={COLOR_1}
                 cancelButtonColorScheme="gray"

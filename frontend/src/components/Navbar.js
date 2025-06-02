@@ -3,10 +3,11 @@ import { Flex, HStack, Text } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { FiHelpCircle, FiSearch } from "react-icons/fi";
+import { FiGlobe, FiHelpCircle, FiSearch } from "react-icons/fi";
 
 import { COLOR_1, COLOR_3 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import UserSearch from "./UserSearch.js";
 
 const MotionBox = motion.div;
@@ -14,6 +15,7 @@ const MotionBox = motion.div;
 const Navbar = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { lang, t, toggle } = useLang();
     const [open, setOpen] = useState(false);
 
     const goHome = () => navigate("/");
@@ -55,6 +57,12 @@ const Navbar = () => {
                         </MotionBox>
                     )}
                 </AnimatePresence>
+                <HStack spacing={1} cursor="pointer" onClick={toggle}>
+                    <Text color={COLOR_1} fontSize="sm">
+                        {lang === "tp" ? t("lang_tp") : t("lang_en")}
+                    </Text>
+                    <FiGlobe size="40px" />
+                </HStack>
                 <FiHelpCircle size="40px" onClick={() => navigate("/site/info")} cursor="pointer" />
                 <FiSearch size="40px" onClick={() => setOpen((v) => !v)} cursor="pointer" />
                 <CgProfile size="40px" onClick={goProfile} cursor="pointer" />
