@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
+import { useLang } from "../contexts/useLang.js";
 import { followApi, getUserApi, getFollowersApi, getFollowingApi, getPostsApi } from "../api/endpoints.js";
 import ListOfUsers from "../components/ListOfUsers.js";
 import CreatePost from "../components/CreatePost.js";
@@ -25,6 +26,7 @@ import ConfirmDialog from "../components/ConfirmDialogue.js";
 
 const UserProfile = () => {
     const { logout } = useAuth();
+    const { t } = useLang();
     const navigate = useNavigate();
     const textColor = COLOR_4;
     const secondaryTextColor = "gray.300";
@@ -56,7 +58,7 @@ const UserProfile = () => {
     const [usersInModal, setUsersInModal] = useState([]);
 
     const openFollowers = async () => {
-        setUsersModalTitle("jan kute");
+        setUsersModalTitle(t("followers"));
         setUsersModalOpen(true);
         setUsersModalLoading(true);
         try {
@@ -68,7 +70,7 @@ const UserProfile = () => {
     };
 
     const openFollowing = async () => {
-        setUsersModalTitle("jan pi kute mi");
+        setUsersModalTitle(t("following"));
         setUsersModalOpen(true);
         setUsersModalLoading(true);
         try {
@@ -112,13 +114,13 @@ const UserProfile = () => {
                 setIsFollowing(data.is_following);
                 setProfile(data);
             } catch {
-                setError("User not found");
+                setError(t("profile_not_found"));
             } finally {
                 setLoading(false);
             }
         })();
         return () => controller.abort();
-    }, [username]);
+    }, [username, t]);
 
     useEffect(() => {
         (async () => {
@@ -147,10 +149,10 @@ const UserProfile = () => {
                 >
                     <AlertIcon boxSize="40px" mr={0} color="red.500" />
                     <AlertTitle mt={4} mb={1} fontSize="lg" color={textColor}>
-                        User Not Found
+                        {t("profile_not_found")}
                     </AlertTitle>
                     <AlertDescription maxWidth="sm" color={secondaryTextColor}>
-                        The username "{username}" doesn't exist.
+                        {t("profile_not_found_desc_1") + username + t("profile_not_found_desc_2")}
                     </AlertDescription>
                 </Alert>
             </Container>
@@ -176,11 +178,9 @@ const UserProfile = () => {
                                 _hover={{ bg: COLOR_3, color: textColor }}
                                 size="sm"
                                 borderRadius="md"
-                                onClick={() => {
-                                    navigate("/account/edit");
-                                }}
+                                onClick={() => navigate("/account/edit")}
                             >
-                                o ante e lipu mi
+                                {t("edit_profile_button")}
                             </Button>
                             <Button
                                 bg={"transparent"}
@@ -191,11 +191,9 @@ const UserProfile = () => {
                                 size="sm"
                                 ml={{ base: 1, sm: 4 }}
                                 w={{ base: "auto", sm: "auto" }}
-                                onClick={() => {
-                                    setConfirmOpen(true);
-                                }}
+                                onClick={() => setConfirmOpen(true)}
                             >
-                                o tawa weka
+                                {t("logout_button")}
                             </Button>
                         </HStack>
                     ) : (
@@ -209,7 +207,7 @@ const UserProfile = () => {
                             size="sm"
                             onClick={handleFollowButton}
                         >
-                            {isFollowing ? "o kute ala" : "o kute"}
+                            {isFollowing ? t("unfollow") : t("follow")}
                         </Button>
                     )}
 
@@ -218,21 +216,21 @@ const UserProfile = () => {
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.post_count}
                             </Text>
-                            <Text color={secondaryTextColor}>pana</Text>
+                            <Text color={secondaryTextColor}>{t("posts")}</Text>
                         </HStack>
 
                         <HStack onClick={openFollowers} cursor="pointer">
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.follower_count}
                             </Text>
-                            <Text color={secondaryTextColor}>jan kute</Text>
+                            <Text color={secondaryTextColor}>{t("followers")}</Text>
                         </HStack>
 
                         <HStack onClick={openFollowing} cursor="pointer">
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.following_count}
                             </Text>
-                            <Text color={secondaryTextColor}>jan pi kute mi</Text>
+                            <Text color={secondaryTextColor}>{t("following")}</Text>
                         </HStack>
                     </HStack>
 
@@ -275,10 +273,10 @@ const UserProfile = () => {
                 isOpen={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onConfirmLogout}
-                title="sin wile ala wile e tawa weka tan insa?"
+                title={t("logout_confirm_title")}
                 description=""
-                confirmText="wile"
-                cancelText="ala"
+                confirmText={t("logout_confirm_yes")}
+                cancelText={t("logout_confirm_no")}
                 headerTextColor={COLOR_1}
                 bodyTextColor={COLOR_1}
                 cancelButtonColorScheme="gray"
