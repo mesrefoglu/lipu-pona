@@ -63,10 +63,12 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "base.authenticate.CookiesAuthentication",
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'base.authenticate.CookiesAuthentication',
     ),
-    "EXCEPTION_HANDLER": "backend.utils.log_exception_handler",
+    'EXCEPTION_HANDLER': 'backend.utils.log_exception_handler',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
+    'PAGE_SIZE': 5,
 }
 
 MIDDLEWARE = [

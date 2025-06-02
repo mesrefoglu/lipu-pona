@@ -23,13 +23,13 @@ from .views import (
     DeletePost,
     ToggleLike,
     Likers,
-    GetComments,
+    CommentListView,
     CreateComment,
     EditComment,
     DeleteComment,
     ToggleCommentLike,
     CommentLikers,
-    Feed,
+    FeedView,
 )
 
 urlpatterns = [
@@ -54,11 +54,11 @@ urlpatterns = [
     path('delete-post/<int:id>/', DeletePost, name='delete_post'),
     path('like/', ToggleLike, name='like'),
     path("likers/<int:id>/", Likers, name="likers"),
-    path('comments/<int:id>/', GetComments, name='get_comments'),
+    path('comments/<int:id>/', CommentListView.as_view(), name='get_comments'),
     path('create-comment/', CreateComment, name='create_comment'),
     path('edit-comment/<int:id>/', EditComment, name='edit_comment'),
     path('delete-comment/<int:id>/', DeleteComment, name='delete_comment'),
     path('like-comment/', ToggleCommentLike, name='comment_like'),
     path("comment-likers/<int:id>/", CommentLikers, name="comment_likers"),
-    path('feed/', Feed, name='feed'),
+    path('feed/', FeedView.as_view(), name='feed'),
 ]

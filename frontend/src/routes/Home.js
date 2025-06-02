@@ -1,65 +1,57 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, VStack, Spinner } from "@chakra-ui/react";
-
 import { feedApi } from "../api/endpoints.js";
 import CreatePost from "../components/CreatePost.js";
 import Post from "../components/Post.js";
 
 const Home = () => {
     const [posts, setPosts] = useState([]);
-    const [page, setPage] = useState(1);
+    const [nextCursor, setNextCursor] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const observer = useRef();
 
+    const loadPosts = useCallback(async (cursor = null) => {
+        setLoading(true);
+        const data = await feedApi(cursor);
+        setPosts((prev) => [...prev, ...data.results]);
+        setNextCursor(data.next ? data.next : false);
+        setLoading(false);
+    }, []);
+
+    useEffect(() => {
+        setPosts([]);
+        setNextCursor(null);
+        loadPosts(null);
+    }, [loadPosts]);
+
+    const handlePostDeleted = (deletedId) => setPosts((prev) => prev.filter((p) => p.id !== deletedId));
+
+    const observer = useRef();
     const lastPostRef = useCallback(
         (node) => {
             if (loading) return;
             if (observer.current) observer.current.disconnect();
             observer.current = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && hasMore) setPage((p) => p + 1);
+                if (entries[0].isIntersecting && nextCursor) {
+                    loadPosts(nextCursor);
+                }
             });
             if (node) observer.current.observe(node);
         },
-        [loading, hasMore]
+        [loading, nextCursor, loadPosts]
     );
-
-    const handleNewPost = (newPost) => {
-        setPosts((prev) => [newPost, ...prev]);
-    };
-
-    useEffect(() => {
-        const fetchPosts = async () => {
-            setLoading(true);
-            try {
-                const data = await feedApi(page);
-                setPosts((prev) => [...prev, ...data.results]);
-                setHasMore(data.has_next);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPosts();
-    }, [page]);
 
     return (
         <Box maxW="container.sm" mx="auto" p={2}>
-            <CreatePost onPostCreated={handleNewPost} />
+            <CreatePost onPostCreated={(newPost) => setPosts((prev) => [newPost, ...prev])} />
             <Box maxW="container.sm" mx="auto" py={4}>
                 <VStack spacing={8}>
                     {posts.map((post, i) =>
                         i === posts.length - 1 ? (
                             <Box ref={lastPostRef} w="full" key={post.id}>
-                                <Post {...post} />
+                                <Post {...post} onDelete={handlePostDeleted} />
                             </Box>
                         ) : (
-                            <Post
-                                key={post.id}
-                                {...post}
-                                onDelete={(deletedId) =>
-                                    setPosts((prev) => prev.filter((post) => post.id !== deletedId))
-                                }
-                            />
+                            <Post key={post.id} {...post} onDelete={handlePostDeleted} />
                         )
                     )}
                 </VStack>

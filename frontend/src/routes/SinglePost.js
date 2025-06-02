@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Box, VStack, Spinner, Alert, AlertIcon, Text, Button } from "@chakra-ui/react";
 
@@ -17,53 +17,54 @@ const SinglePost = () => {
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
     const [commentsError, setCommentsError] = useState("");
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
+
+    const [nextCursor, setNextCursor] = useState(null);
 
     useEffect(() => {
-        const fetchPost = async () => {
-            setLoadingPost(true);
-            try {
-                const data = await getPostApi(id);
-                setPost(data);
-            } catch (err) {
+        setLoadingPost(true);
+        setErrorPost("");
+        setPost(null);
+
+        getPostApi(id)
+            .then((data) => setPost(data))
+            .catch(() => {
                 setErrorPost("lipu ni li lon ala anu len. ante la, jan li weka e lipu ni.");
-            } finally {
-                setLoadingPost(false);
-            }
-        };
-        fetchPost();
+            })
+            .finally(() => setLoadingPost(false));
     }, [id]);
 
-    useEffect(() => {
-        const fetchComments = async () => {
+    const loadComments = useCallback(
+        async (cursor) => {
             setLoadingComments(true);
             setCommentsError("");
+
             try {
-                const data = await getCommentsApi(id, page);
+                const data = await getCommentsApi(id, cursor);
                 setComments((prev) => [...prev, ...data.results]);
-                setHasMore(data.has_next);
-            } catch (err) {
+                if (data.next) {
+                    setNextCursor(data.next);
+                } else {
+                    setNextCursor(false);
+                }
+            } catch {
                 setCommentsError("pilin ike: toki pi ante li ken ala kama.");
             } finally {
                 setLoadingComments(false);
             }
-        };
+        },
+        [id]
+    );
 
-        fetchComments();
-    }, [id, page]);
-
-    const handleCommentCreated = (newComment) => {
-        setComments((prev) => [newComment, ...prev]);
-    };
-
-    const handleCommentDeleted = (deletedId) => {
-        setComments((prev) => prev.filter((c) => c.id !== deletedId));
-    };
+    useEffect(() => {
+        setComments([]);
+        setNextCursor(null);
+        setCommentsError("");
+        loadComments(null);
+    }, [loadComments]);
 
     const loadMoreComments = () => {
-        if (hasMore && !loadingComments) {
-            setPage((prev) => prev + 1);
+        if (nextCursor && !loadingComments) {
+            loadComments(nextCursor);
         }
     };
 
@@ -102,15 +103,32 @@ const SinglePost = () => {
                 <Post {...post} />
 
                 <Box mt={4} mb={6}>
-                    <CreateComment onPostCreated={handleCommentCreated} />
+                    <CreateComment
+                        onPostCreated={(newComment) => {
+                            setComments((prev) => [newComment, ...prev]);
+                        }}
+                    />
                 </Box>
 
                 <VStack spacing={6} w="full" align="stretch">
                     {comments.map((comment) => (
-                        <Comment key={comment.id} {...comment} onDelete={handleCommentDeleted} />
+                        <Comment
+                            key={comment.id}
+                            {...comment}
+                            onDelete={(deletedId) => {
+                                setComments((prev) => prev.filter((c) => c.id !== deletedId));
+                            }}
+                        />
                     ))}
 
-                    {hasMore && (
+                    {commentsError && (
+                        <Alert status="error" rounded="md">
+                            <AlertIcon />
+                            {commentsError}
+                        </Alert>
+                    )}
+
+                    {nextCursor && (
                         <Button
                             onClick={loadMoreComments}
                             isLoading={loadingComments}
@@ -121,13 +139,6 @@ const SinglePost = () => {
                         >
                             o kama sin
                         </Button>
-                    )}
-
-                    {commentsError && (
-                        <Alert status="error" rounded="md">
-                            <AlertIcon />
-                            {commentsError}
-                        </Alert>
                     )}
                 </VStack>
             </VStack>

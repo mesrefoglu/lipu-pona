@@ -215,9 +215,10 @@ export const getLikersApi = async (id) => {
     return res.data;
 };
 
-export const getCommentsApi = async (id, page = 1) => {
+export const getCommentsApi = async (id, cursor = null) => {
+    let url = cursor ? cursor : `/comments/${id}/`;
     try {
-        const response = await api.get(`/comments/${id}/`, { params: { page } });
+        const response = await api.get(url);
         return response.data;
     } catch (error) {
         console.error("Error fetching comments:", error);
@@ -277,7 +278,13 @@ export const getCommentLikersApi = async (id) => {
     }
 };
 
-export const feedApi = async (page = 1) => {
-    const response = await api.get(`/feed/?page=${page}`);
-    return response.data;
+export const feedApi = async (cursor = null) => {
+    const url = cursor ? cursor : `/feed/`;
+    try {
+        const response = await api.get(url);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching feed:", error);
+        throw error;
+    }
 };

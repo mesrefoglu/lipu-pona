@@ -1,16 +1,18 @@
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import NotFound
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core.paginator import Paginator
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Count
-from django.conf import settings
-from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth.tokens import default_token_generator
 from .models import MyUser, Post, Comment
 from .serializers import (
     PasswordResetRequestSerializer,
@@ -21,6 +23,7 @@ from .serializers import (
     PostSerializer,
     CommentSerializer,
 )
+from .pagination import FeedCursorPagination, CommentCursorPagination
 from backend.utils import frontend_reset_url, normalize_whitespace, normalize_name
 
 import logging
@@ -412,27 +415,20 @@ def Likers(request, id):
     serializer = BasicUserSerializer(likers_qs, many=True, context={"request": request})
     return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def GetComments(request, id):
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found."}, status=404)
+class CommentListView(ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CommentCursorPagination
 
-    comments_qs = (
-    post.comments
-        .annotate(like_count=Count("likes"))
-        .order_by("-like_count", "-created_at")
-    )
-    
-    paginator = Paginator(comments_qs, 5)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
+    def get_queryset(self):
+        post_id = self.kwargs.get('id')
 
-    serializer = CommentSerializer(page_obj.object_list, many=True, context={'request': request})
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            raise NotFound(detail="Post not found.")
 
-    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
+        return post.comments.all()
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -526,14 +522,12 @@ def CommentLikers(request, id):
     serializer = BasicUserSerializer(likers_qs, many=True, context={"request": request})
     return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def Feed(request):
-    following = list(request.user.following.all())
-    following.append(request.user)
-    posts_qs = Post.objects.filter(user__in=following).order_by('-id')
-    paginator = Paginator(posts_qs, 10)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-    serializer = PostSerializer(page_obj.object_list, many=True, context={'request': request})
-    return Response({'results': serializer.data, 'has_next': page_obj.has_next()})
+class FeedView(ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = FeedCursorPagination
+
+    def get_queryset(self):
+        following = list(self.request.user.following.all())
+        following.append(self.request.user)
+        return Post.objects.filter(user__in=following)
