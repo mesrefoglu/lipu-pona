@@ -103,14 +103,14 @@ export const translations = {
         following: "jan pi kute mi",
         posts: "pana",
         profile_not_found: "lipu jan li lon ala",
-        profile_not_found_desc: 'nimi "USERNAME" li lon ala.',
+        profile_not_found_desc: 'nimi lipu "USERNAME" li lon ala.',
     },
 
     en: {
         lang_tp: "toki pona",
         lang_en: "English",
         edit: "Edit",
-        likes: "like things",
+        likes: "likes",
         no: "No",
         comment_edited: "someone edited this comment",
         edit_success: "Comment updated!",
@@ -210,6 +210,6 @@ export const translations = {
         following: "Following",
         posts: "Posts",
         profile_not_found: "User Not Found",
-        profile_not_found_desc: 'The username "USERNAME" doesn’t exist.',
+        profile_not_found_desc: 'The username "USERNAME" doesn\'t exist.',
     },
 };
