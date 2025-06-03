@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.core.paginator import Paginator
 from django.core.mail import send_mail
-from django.db import IntegrityError
-from django.db.models import Count, Q
+from django.db import connection, IntegrityError
+from django.db.models import Count, Q, F, ExpressionWrapper, FloatField
+from django.db.models.expressions import RawSQL
+from django.db.models.functions import Now, Extract
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from backend.utils import (
@@ -30,7 +31,7 @@ from .serializers import (
     PostSerializer,
     CommentSerializer,
 )
-from .pagination import FeedCursorPagination, CommentCursorPagination
+from .pagination import FeedCursorPagination, CommentCursorPagination, DiscoverCursorPagination
 
 import logging
 import os
@@ -229,8 +230,6 @@ def Logout(request):
 @permission_classes([IsAuthenticated])
 def SearchUsers(request):
     query = request.query_params.get('q', '').strip()
-    if not query:
-        return Response([], status=status.HTTP_200_OK)
     users = (
         MyUser.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query))
         .annotate(follower_count=Count('followers'))
@@ -628,3 +627,38 @@ class FeedView(ListAPIView):
         following = list(self.request.user.following.all())
         following.append(self.request.user)
         return Post.objects.filter(user__in=following)
+
+class DiscoverView(ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = DiscoverCursorPagination
+
+    def get_queryset(self):
+        if connection.vendor == "postgresql":
+            age_minutes = ExpressionWrapper(
+                (Extract(Now(), "epoch") - Extract(F("created_at"), "epoch")) / 60.0,
+                output_field=FloatField(),
+            )
+        else:
+            table = Post._meta.db_table
+            age_minutes = RawSQL(
+                f"(julianday('now') - julianday({table}.\"created_at\")) * 1440.0",
+                [],
+                output_field=FloatField(),
+            )
+
+        score_expr = ExpressionWrapper(
+            100 * F("likes_count") + 100 * F("commenters_count") - age_minutes,
+            output_field=FloatField(),
+        )
+
+        annotated = Post.objects.annotate(
+                likes_count=Count("likes", distinct=True),
+                commenters_count=Count("comments__user", distinct=True),
+                age_minutes=age_minutes,
+                score=score_expr,
+            )
+        
+        return (
+            annotated.order_by("-score", "-id")
+        )

@@ -97,7 +97,6 @@ export const logoutApi = async () => {
 };
 
 export const searchUsersApi = async (query) => {
-    if (!query) return [];
     try {
         const res = await api.get("/search-users/", { params: { q: query } });
         return res.data;
@@ -310,6 +309,17 @@ export const feedApi = async (cursor = null) => {
         return response.data;
     } catch (error) {
         console.error("Error fetching feed:", error);
+        throw error;
+    }
+};
+
+export const discoverApi = async (cursor = null) => {
+    const url = cursor ? cursor : `/discover/`;
+    try {
+        const response = await api.get(url);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching discover feed:", error);
         throw error;
     }
 };

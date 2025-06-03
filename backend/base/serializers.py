@@ -81,6 +81,7 @@ class PostSerializer(serializers.ModelSerializer):
     comment_count   = serializers.SerializerMethodField()
     formatted_date  = serializers.SerializerMethodField()
     is_edited       = serializers.SerializerMethodField()
+    score           = serializers.FloatField(read_only=True, required=False)
 
     def get_is_mine(self, obj):
         request = self.context.get('request', None)
@@ -120,6 +121,7 @@ class PostSerializer(serializers.ModelSerializer):
             'is_liked',
             'comment_count',
             'is_edited',
+            'score',
         ]
         read_only_fields = [
             'id',
@@ -133,6 +135,7 @@ class PostSerializer(serializers.ModelSerializer):
             'is_liked',
             'comment_count',
             'is_edited',
+            'score',
         ]
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -112,6 +112,8 @@ export const translations = {
         email_sent_description: "mi pana e lipu ilo tawa sina. o lukin e ni la. o pali e lipu sina.",
         email_confirm_success: "lipu sina li pona! o kama lon insa.",
         email_confirm_error: "nasin ni li ike.",
+        discover: "o lukin e ijo sin",
+        search_users_placeholder: "o alasa jan...",
     },
 
     en: {
@@ -228,5 +230,7 @@ export const translations = {
             "We've sent you a link to confirm your email address. Open it to activate your account.",
         email_confirm_success: "Your account is now active. Please log in.",
         email_confirm_error: "Activation link is invalid or expired.",
+        discover: "Discover",
+        search_users_placeholder: "Search users...",
     },
 };
