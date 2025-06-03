@@ -106,6 +106,7 @@ const SinglePost = () => {
                     <CreateComment
                         onCommentCreated={(newComment) => {
                             setComments((prev) => [newComment, ...prev]);
+                            setPost((prev) => ({ ...prev, comment_count: prev.comment_count + 1 }));
                         }}
                     />
                 </Box>
@@ -117,6 +118,10 @@ const SinglePost = () => {
                             {...comment}
                             onDelete={(deletedId) => {
                                 setComments((prev) => prev.filter((c) => c.id !== deletedId));
+                                setPost((prev) => ({
+                                    ...prev,
+                                    comment_count: Math.max(prev.comment_count - 1, 0),
+                                }));
                             }}
                         />
                     ))}

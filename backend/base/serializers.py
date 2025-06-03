@@ -121,7 +121,6 @@ class PostSerializer(serializers.ModelSerializer):
             'is_liked',
             'comment_count',
             'is_edited',
-            'score',
         ]
         read_only_fields = [
             'id',
@@ -135,7 +134,6 @@ class PostSerializer(serializers.ModelSerializer):
             'is_liked',
             'comment_count',
             'is_edited',
-            'score',
         ]
 
 class CommentSerializer(serializers.ModelSerializer):
