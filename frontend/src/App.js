@@ -20,6 +20,10 @@ import EmailSent from "./routes/EmailSent.js";
 import ActivateAccount from "./routes/ActivateAccount.js";
 import EditUser from "./routes/EditUser.js";
 import Info from "./routes/Info.js";
+import LegalIndex from "./routes/legal/LegalIndex.js";
+import TOS from "./routes/legal/TOS.js";
+import PrivacyPolicy from "./routes/legal/PrivacyPolicy.js";
+import CookiesNotice from "./routes/legal/Cookies.js";
 
 function App() {
     return (
@@ -133,6 +137,38 @@ function App() {
                                 element={
                                     <Layout>
                                         <Info />
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/site/legal"
+                                element={
+                                    <Layout>
+                                        <LegalIndex />
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/site/legal/tos"
+                                element={
+                                    <Layout>
+                                        <TOS />
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/site/legal/privacy-policy"
+                                element={
+                                    <Layout>
+                                        <PrivacyPolicy />
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/site/legal/cookies"
+                                element={
+                                    <Layout>
+                                        <CookiesNotice />
                                     </Layout>
                                 }
                             />

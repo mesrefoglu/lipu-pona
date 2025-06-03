@@ -12,6 +12,7 @@ import {
     Link,
     Alert,
     AlertIcon,
+    Checkbox,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
@@ -34,6 +35,7 @@ const Register = () => {
         name: "",
         password: "",
         confirmPassword: "",
+        accepted: false,
     });
     const [touched, setTouched] = useState({});
     const [usernameTaken, setUsernameTaken] = useState(false);
@@ -77,6 +79,7 @@ const Register = () => {
             : values.confirmPassword !== values.password
             ? t("register_confirm_mismatch")
             : "",
+        accepted: !values.accepted ? "You must accept the Terms of Service and Privacy Policy." : "",
     });
 
     const errors = getErrors();
@@ -107,6 +110,7 @@ const Register = () => {
             name: true,
             password: true,
             confirmPassword: true,
+            accepted: true,
         });
         setError("");
         if (hasErrors) return;
@@ -205,6 +209,25 @@ const Register = () => {
                         {touched.confirmPassword && errors.confirmPassword && (
                             <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
                         )}
+                    </FormControl>
+
+                    <FormControl id="accepted" isInvalid={touched.accepted && !!errors.accepted}>
+                        <Checkbox
+                            isChecked={values.accepted}
+                            onChange={(e) => setValues((v) => ({ ...v, accepted: e.target.checked }))}
+                            colorScheme="teal"
+                        >
+                            I accept the{" "}
+                            <Link as={RouterLink} to="/site/legal/tos" color="blue.500" target="_blank">
+                                Terms of Service
+                            </Link>{" "}
+                            and{" "}
+                            <Link as={RouterLink} to="/site/legal/privacy-policy" color="blue.500" target="_blank">
+                                Privacy Policy
+                            </Link>
+                            .
+                        </Checkbox>
+                        {touched.accepted && errors.accepted && <FormErrorMessage>{errors.accepted}</FormErrorMessage>}
                     </FormControl>
 
                     <Button

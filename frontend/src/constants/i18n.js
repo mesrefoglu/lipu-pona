@@ -114,6 +114,13 @@ export const translations = {
         email_confirm_error: "nasin ni li ike.",
         discover: "o lukin e ijo sin",
         search_users_placeholder: "o alasa jan...",
+        info: "sona",
+        info_body:
+            "lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.",
+        info_contact: `
+o toki tawa mi:
+discord: qedized
+email: contact@qedized.com`,
     },
 
     en: {
@@ -186,7 +193,7 @@ export const translations = {
         login_error: "Invalid username or password",
         signup_prompt: "New here?",
         signup_link: "Create an account",
-        register_heading: "Create an account",
+        register_heading: "Register",
         register_button: "Register",
         already_have_account: "Already have an account?",
         login_link: "Log in",
@@ -232,5 +239,12 @@ export const translations = {
         email_confirm_error: "Activation link is invalid or expired.",
         discover: "Discover",
         search_users_placeholder: "Search users...",
+        info: "Info",
+        info_body:
+            "lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.",
+        info_contact: `
+Contact me:
+discord: qedized
+email: contact@qedized.com`,
     },
 };
