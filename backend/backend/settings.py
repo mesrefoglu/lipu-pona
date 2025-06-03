@@ -70,6 +70,15 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'backend.utils.log_exception_handler',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 5,
+
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon':  '50/hour',
+        'user':  '1000/hour',
+    },
 }
 
 MIDDLEWARE = [

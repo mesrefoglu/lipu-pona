@@ -20,7 +20,7 @@ from .views import (
     EditUser,
     DeleteUser,
     GetPost,
-    GetPosts,
+    UserPostsView,
     CreatePost,
     EditPost,
     DeletePost,
@@ -37,8 +37,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='login'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='refresh'),
     path('authenticated/', Authenticated, name='authenticated'),
     path('password-reset/request/', PasswordResetRequest, name='password_reset_request'),
     path('password-reset/confirm/', PasswordResetConfirm, name='password_reset_confirm'),
@@ -55,7 +55,7 @@ urlpatterns = [
     path('edit-user/', EditUser, name='edit_user'),
     path('delete-user/', DeleteUser, name='delete_user'),
     path('post/<int:id>/', GetPost, name='get_post'),
-    path('posts/<str:username>/', GetPosts, name='get_posts'),
+    path('posts/<str:username>/', UserPostsView.as_view(), name='get_posts'),
     path('create-post/', CreatePost, name='create_post'),
     path('edit-post/<int:id>/', EditPost, name='edit_post'),
     path('delete-post/<int:id>/', DeletePost, name='delete_post'),

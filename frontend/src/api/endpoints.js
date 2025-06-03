@@ -183,9 +183,10 @@ export const getPostApi = async (id) => {
     }
 };
 
-export const getPostsApi = async (username) => {
+export const getPostsApi = async (username, cursor = null) => {
+    const url = cursor ? cursor : `/posts/${username}/`;
     try {
-        const response = await api.get(`/posts/${username}`);
+        const response = await api.get(url);
         return response.data;
     } catch (error) {
         console.error("Error fetching posts:", error);

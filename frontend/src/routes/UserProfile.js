@@ -12,7 +12,7 @@ import {
     AlertTitle,
     AlertDescription,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
@@ -25,6 +25,7 @@ import Post from "../components/Post.js";
 import ConfirmDialog from "../components/ConfirmDialogue.js";
 
 const UserProfile = () => {
+    const observer = useRef();
     const { logout } = useAuth();
     const { t } = useLang();
     const navigate = useNavigate();
@@ -37,6 +38,8 @@ const UserProfile = () => {
     const [isSelf, setIsSelf] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [posts, setPosts] = useState([]);
+    const [loadingPosts, setLoadingPosts] = useState(false);
+    const [nextCursor, setNextCursor] = useState(null);
 
     const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -122,14 +125,39 @@ const UserProfile = () => {
         return () => controller.abort();
     }, [username, t]);
 
-    useEffect(() => {
-        (async () => {
+    const loadPosts = useCallback(
+        async (cursor = null) => {
+            setLoadingPosts(true);
             try {
-                const data = await getPostsApi(username);
-                setPosts(data);
-            } catch {}
-        })();
-    }, [username]);
+                const data = await getPostsApi(username, cursor);
+                setPosts((prev) => [...prev, ...data.results]);
+                setNextCursor(data.next ? data.next : false);
+            } finally {
+                setLoadingPosts(false);
+            }
+        },
+        [username]
+    );
+
+    useEffect(() => {
+        setPosts([]);
+        setNextCursor(null);
+        loadPosts(null);
+    }, [loadPosts]);
+
+    const lastPostRef = useCallback(
+        (node) => {
+            if (loadingPosts) return;
+            if (observer.current) observer.current.disconnect();
+            observer.current = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && nextCursor) {
+                    loadPosts(nextCursor);
+                }
+            });
+            if (node) observer.current.observe(node);
+        },
+        [loadingPosts, nextCursor, loadPosts]
+    );
 
     if (loading) return <></>;
 
@@ -258,15 +286,26 @@ const UserProfile = () => {
             )}
 
             <VStack spacing={6} mt={4}>
-                {posts.map((post) => (
-                    <Post
-                        key={post.id}
-                        {...post}
-                        name={profile.first_name}
-                        profile_picture={profile.profile_picture}
-                        onDelete={handlePostDeleted}
-                    />
-                ))}
+                {posts.map((post, i) =>
+                    i === posts.length - 1 ? (
+                        <Box ref={lastPostRef} w="full" key={post.id}>
+                            <Post
+                                {...post}
+                                name={profile.first_name}
+                                profile_picture={profile.profile_picture}
+                                onDelete={handlePostDeleted}
+                            />
+                        </Box>
+                    ) : (
+                        <Post
+                            key={post.id}
+                            {...post}
+                            name={profile.first_name}
+                            profile_picture={profile.profile_picture}
+                            onDelete={handlePostDeleted}
+                        />
+                    )
+                )}
             </VStack>
 
             <ConfirmDialog

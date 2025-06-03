@@ -266,7 +266,15 @@ const Post = ({
 
                 {image && (
                     <Link href={image} isExternal>
-                        <Image src={image} alt="post image" w="full" borderRadius="md" mb={3} objectFit="cover" />
+                        <Image
+                            src={image}
+                            alt="post image"
+                            w="full"
+                            borderRadius="md"
+                            mb={3}
+                            objectFit="cover"
+                            loading="lazy"
+                        />
                     </Link>
                 )}
 

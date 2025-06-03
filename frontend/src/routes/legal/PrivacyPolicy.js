@@ -2,7 +2,7 @@ import { Box, Heading, Text } from "@chakra-ui/react";
 import { COLOR_4 } from "../../constants/constants.js";
 
 const PrivacyPolicy = () => (
-    <Box w="100%" maxW="container.md" mx="auto" py={10} px={4}>
+    <Box w="100%" maxW="container.lg" mx="auto" py={10} px={4}>
         <Heading size="lg" color={COLOR_4} mb={6}>
             Privacy&nbsp;Policy
         </Heading>

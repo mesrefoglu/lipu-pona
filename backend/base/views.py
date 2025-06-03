@@ -1,9 +1,10 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -39,6 +40,8 @@ import os
 logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
     def post(self, request, *args, **kwargs):
         try:
             parent_resp = super().post(request, *args, **kwargs)
@@ -68,6 +71,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return resp
         
 class CustomTokenRefreshView(TokenRefreshView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
@@ -100,11 +105,13 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Authenticated(request):
     serializer = MyUserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
 
 @api_view(["POST"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def ActivateAccount(request):
     serializer = AccountActivationSerializer(data=request.data)
     if not serializer.is_valid():
@@ -123,6 +130,7 @@ def ActivateAccount(request):
     return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def PasswordResetRequest(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -144,6 +152,7 @@ def PasswordResetRequest(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["POST"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def PasswordResetConfirm(request):
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if not serializer.is_valid():
@@ -163,18 +172,21 @@ def PasswordResetConfirm(request):
     return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def UsernameExists(request):
     username = request.query_params.get("username", "").strip().lower()
     exists = MyUser.objects.filter(username=username).exists()
     return Response({"exists": exists})
 
 @api_view(["GET"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def EmailExists(request):
     email = request.query_params.get("email", "").strip().lower()
     exists = MyUser.objects.filter(email=email).exists()
     return Response({"exists": exists})
 
 @api_view(['POST'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Register(request):
     data = request.data.copy()
     data['first_name'] = normalize_name(data.get('first_name', '')).strip()
@@ -201,6 +213,7 @@ def Register(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['POST'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 @permission_classes([IsAuthenticated])
 def Logout(request):
     resp = Response({"success": True})
@@ -228,6 +241,7 @@ def Logout(request):
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def SearchUsers(request):
     query = request.query_params.get('q', '').strip()
     users = (
@@ -239,7 +253,8 @@ def SearchUsers(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated]) 
+@permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def GetUserProfile(request, username):    
     try:
         user = MyUser.objects.get(username=username)
@@ -256,6 +271,7 @@ def GetUserProfile(request, username):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Followers(request, username):
     try:
         user = MyUser.objects.get(username=username)
@@ -277,6 +293,7 @@ def Followers(request, username):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Following(request, username):
     try:
         user = MyUser.objects.get(username=username)
@@ -297,6 +314,7 @@ def Following(request, username):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def ToggleFollow(request):
     target_username = request.data.get("username")
     if not target_username:
@@ -327,6 +345,7 @@ def ToggleFollow(request):
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def EditUser(request):
     data = request.data.copy()
 
@@ -359,6 +378,7 @@ def EditUser(request):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def DeleteUser(request):
     user = request.user
 
@@ -399,6 +419,7 @@ def DeleteUser(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def GetPost(request, id):
     try:
         post = Post.objects.get(id=id)
@@ -414,6 +435,7 @@ def GetPost(request, id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def GetPosts(request, username):
     try:
         user = MyUser.objects.get(username=username)
@@ -431,8 +453,24 @@ def GetPosts(request, username):
 
     return Response(data)
 
+class UserPostsView(ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = FeedCursorPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get_queryset(self):
+        username = self.kwargs["username"]
+        try:
+            user = MyUser.objects.get(username=username)
+        except MyUser.DoesNotExist:
+            raise NotFound(detail="User not found.")
+        
+        return user.posts.all().order_by('-id')
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def CreatePost(request):
     data = request.data.copy()
     data['text'] = normalize_whitespace(data.get('text', '')).strip()
@@ -444,6 +482,7 @@ def CreatePost(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def EditPost(request, id):
     post = Post.objects.filter(id=id).first()
     if not post:
@@ -457,6 +496,7 @@ def EditPost(request, id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def DeletePost(request, id):
     try:
         post = Post.objects.get(id=id)
@@ -471,6 +511,7 @@ def DeletePost(request, id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def ToggleLike(request):
     post_id = request.data.get("id")
     if not post_id:
@@ -493,6 +534,7 @@ def ToggleLike(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Likers(request, id):
     try:
         post = Post.objects.get(id=id)
@@ -515,6 +557,7 @@ class CommentListView(ListAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CommentCursorPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         post_id = self.kwargs.get('id')
@@ -528,6 +571,7 @@ class CommentListView(ListAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def CreateComment(request):
     data = request.data.copy()
     data['text'] = normalize_whitespace(data.get('text', '')).strip()
@@ -546,6 +590,7 @@ def CreateComment(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def EditComment(request, id):
     try:
         comment = Comment.objects.get(id=id)
@@ -565,6 +610,7 @@ def EditComment(request, id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def DeleteComment(request, id):
     try:
         comment = Comment.objects.get(id=id)
@@ -579,6 +625,7 @@ def DeleteComment(request, id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def ToggleCommentLike(request):
     comment_id = request.data.get("id")
     if not comment_id:
@@ -600,6 +647,7 @@ def ToggleCommentLike(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def CommentLikers(request, id):
     try:
         comment = Comment.objects.get(id=id)
@@ -622,6 +670,7 @@ class FeedView(ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = FeedCursorPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         following = list(self.request.user.following.all())
@@ -632,6 +681,7 @@ class DiscoverView(ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = DiscoverCursorPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         if connection.vendor == "postgresql":
