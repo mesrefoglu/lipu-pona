@@ -17,7 +17,6 @@ import { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
-import { useAuth } from "../contexts/useAuth.js";
 import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.js";
 import { useLang } from "../contexts/useLang.js";
 
@@ -42,7 +41,6 @@ const Register = () => {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
-    const { authLogin } = useAuth();
     const { t } = useLang();
 
     const getErrors = () => ({
@@ -114,9 +112,12 @@ const Register = () => {
         if (hasErrors) return;
         try {
             const { username, name, email, password } = values;
-            await registerApi(username, name, email, password);
-            const me = await authLogin(username, password);
-            navigate(`/${me.username}`);
+            const res = await registerApi(username, name, email, password);
+            if (res.success) {
+                navigate("/account/email-sent");
+            } else {
+                setError(t("register_error"));
+            }
         } catch {
             setError(t("register_error"));
         }
@@ -221,7 +222,7 @@ const Register = () => {
 
                     <Text fontSize="sm" color={COLOR_1}>
                         {t("already_have_account")}{" "}
-                        <Link as={RouterLink} to="/account/login" color="blue.500" fontWeight="semibold">
+                        <Link as={RouterLink} to="/account/login" color="blue.500">
                             {t("login_link")}
                         </Link>
                         .

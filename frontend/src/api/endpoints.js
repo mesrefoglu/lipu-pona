@@ -86,6 +86,11 @@ export const registerApi = async (username, name, email, password) => {
     }
 };
 
+export const confirmEmailApi = async (uid, token) => {
+    const response = await api.post("/activate/", { uid, token });
+    return response.data;
+};
+
 export const logoutApi = async () => {
     await api.post("/logout/");
     return { success: true };

@@ -66,7 +66,7 @@ export const translations = {
         password_label: "nimi len",
         forgot_password_link: "mi pini sona e nimi len.",
         login_button: "o pana",
-        login_error: "nimi lipu anu nimi len li suli",
+        login_error: "nimi lipu anu nimi len li suli.",
         signup_prompt: "sina sin anu seme?",
         signup_link: "o pana e lipu sin",
         register_heading: "o pana e lipu sin",
@@ -108,6 +108,10 @@ export const translations = {
         profile_not_found_desc_1: 'nimi lipu "',
         profile_not_found_desc_2: '" li lon ala.',
         delete_account_button: "o pakala e lipu mi",
+        email_sent_heading: "o lukin e lipu ilo",
+        email_sent_description: "mi pana e lipu ilo tawa sina. o lukin e ni la. o pali e lipu sina.",
+        email_confirm_success: "lipu sina li pona! o kama lon insa.",
+        email_confirm_error: "nasin ni li ike.",
     },
 
     en: {
@@ -219,5 +223,10 @@ export const translations = {
         profile_not_found_desc_1: 'The username "',
         profile_not_found_desc_2: '" does not exist.',
         delete_account_button: "Delete My Account",
+        email_sent_heading: "Check your email!",
+        email_sent_description:
+            "We've sent you a link to confirm your email address. Open it to activate your account.",
+        email_confirm_success: "Your account is now active. Please log in.",
+        email_confirm_error: "Activation link is invalid or expired.",
     },
 };

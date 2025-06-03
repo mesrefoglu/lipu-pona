@@ -12,6 +12,9 @@ def log_exception_handler(exc, context):
         logger.exception("Unhandled exception", exc_info=exc)
     return response
 
+def frontend_email_activation_url(uid, token):
+    return f"{settings.FRONTEND_URL.rstrip('/')}/activate/{uid}/{token}"
+
 def frontend_reset_url(uid, token):
     return f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}"
 

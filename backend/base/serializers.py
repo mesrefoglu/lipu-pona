@@ -20,6 +20,19 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+
 class MyUserSerializer(serializers.ModelSerializer):
     post_count      = serializers.SerializerMethodField()
     follower_count  = serializers.SerializerMethodField()
@@ -53,6 +66,10 @@ class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model  = MyUser
         fields = ["username", "first_name", "profile_picture"]
+
+class AccountActivationSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
 
 class PostSerializer(serializers.ModelSerializer):
     is_mine         = serializers.SerializerMethodField()
@@ -174,15 +191,3 @@ class CommentSerializer(serializers.ModelSerializer):
             'is_liked',
             'is_edited',
         ]
-
-class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-class PasswordResetConfirmSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
-    new_password = serializers.CharField(write_only=True)
-
-    def validate_new_password(self, value):
-        validate_password(value)
-        return value

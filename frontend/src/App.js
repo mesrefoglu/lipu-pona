@@ -16,6 +16,8 @@ import Login from "./routes/Login.js";
 import ForgotPassword from "./routes/ForgotPassword.js";
 import ResetPassword from "./routes/ResetPassword.js";
 import Register from "./routes/Register.js";
+import EmailSent from "./routes/EmailSent.js";
+import ActivateAccount from "./routes/ActivateAccount.js";
 import EditUser from "./routes/EditUser.js";
 import Info from "./routes/Info.js";
 
@@ -92,6 +94,26 @@ function App() {
                                     <Layout>
                                         <GuestRoute>
                                             <Register />
+                                        </GuestRoute>
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/account/email-sent"
+                                element={
+                                    <Layout>
+                                        <GuestRoute>
+                                            <EmailSent />
+                                        </GuestRoute>
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/activate/:uid/:token"
+                                element={
+                                    <Layout>
+                                        <GuestRoute>
+                                            <ActivateAccount />
                                         </GuestRoute>
                                     </Layout>
                                 }

@@ -13,6 +13,12 @@ from django.db import IntegrityError
 from django.db.models import Count, Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from backend.utils import (
+    frontend_email_activation_url,
+    frontend_reset_url,
+    normalize_whitespace,
+    normalize_name
+)
 from .models import MyUser, Post, Comment
 from .serializers import (
     PasswordResetRequestSerializer,
@@ -20,11 +26,11 @@ from .serializers import (
     MyUserSerializer,
     BasicUserSerializer,
     UserRegisterSerializer,
+    AccountActivationSerializer,
     PostSerializer,
     CommentSerializer,
 )
 from .pagination import FeedCursorPagination, CommentCursorPagination
-from backend.utils import frontend_reset_url, normalize_whitespace, normalize_name
 
 import logging
 import os
@@ -98,6 +104,24 @@ def Authenticated(request):
     return Response(serializer.data)
 
 @api_view(["POST"])
+def ActivateAccount(request):
+    serializer = AccountActivationSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    uidb64 = serializer.validated_data["uid"]
+    token = serializer.validated_data["token"]
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = MyUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, MyUser.DoesNotExist):
+        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+    if not default_token_generator.check_token(user, token):
+        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+    user.is_active = True
+    user.save()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
 def PasswordResetRequest(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -157,7 +181,19 @@ def Register(request):
     serializer = UserRegisterSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
+        user.is_active = False
+        user.save()
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        activation_url = frontend_email_activation_url(uid, token)
+        send_mail(
+            "Confirm your email",
+            f"Use the link below to confirm your email:\n{activation_url}",
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=True,
+        )
         return Response({"success": True}, status=status.HTTP_201_CREATED)
     except Exception as exc:
         print(exc)
