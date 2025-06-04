@@ -1,4 +1,7 @@
 .env
+Dockerfile
+fly.toml
+.dockerignore
 credentials.txt
 /media
 /staticfiles
