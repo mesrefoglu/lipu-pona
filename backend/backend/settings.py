@@ -7,16 +7,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
+
 FRONTEND_URL       = env('FRONTEND_URL', default='http://lipupona.net')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@lipupona.net')
 EMAIL_BACKEND      = env(
-    'EMAIL_BACKEND',
+    'DJANGO_EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend'
 )
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
 DEBUG = env.bool('DEBUG', default=False)
+
+SENDGRID_API_KEY           = env('SENDGRID_API_KEY', default='')
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+SENDGRID_ECHO_TO_STDOUT    = DEBUG
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
 
@@ -76,7 +81,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://lipupona.net",
+    "https://lipupona.net",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
