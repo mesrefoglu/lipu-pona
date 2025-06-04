@@ -12,7 +12,7 @@ const PrivacyPolicy = () => (
                 INTRODUCTION
             </Text>
             {`
-Welcome to lipu pona (operated by Liam Mesrefoglu et al., "we", "us", "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and share your information when you use https://lipu-pona.com (the “Service”). By accessing or using the Service, you agree to this Privacy Policy.
+Welcome to lipu pona (operated by Liam Mesrefoglu et al., "we", "us", "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and share your information when you use https://lipupona.net (the “Service”). By accessing or using the Service, you agree to this Privacy Policy.
 
 `}
             <Text as="span" fontWeight="bold">

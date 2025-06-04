@@ -1,5 +1,5 @@
 export const BASE_URL = "http://lipupona.net";
-export const API_URL = "http://lipupona.net/api";
+export const API_URL = "http://lipupona.fly.dev/api";
 
 export const COLOR_1 = "#222831";
 export const COLOR_2 = "#393E46";

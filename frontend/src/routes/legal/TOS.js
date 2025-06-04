@@ -12,7 +12,7 @@ const TOS = () => (
                 INTRODUCTION
             </Text>
             {`
-Welcome to lipu pona (operated by Liam Mesrefoglu et al., "we", "us", "our"). By creating an account, browsing, or otherwise using the Service located at https://lipu-pona.com (the "Service"), you ("you", "User") agree to be bound by these Terms of Service ("Terms"). If you do not agree, you must not access the Service.
+Welcome to lipu pona (operated by Liam Mesrefoglu et al., "we", "us", "our"). By creating an account, browsing, or otherwise using the Service located at https://lipupona.net (the "Service"), you ("you", "User") agree to be bound by these Terms of Service ("Terms"). If you do not agree, you must not access the Service.
 
 `}
             <Text as="span" fontWeight="bold">
