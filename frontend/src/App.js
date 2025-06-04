@@ -113,7 +113,7 @@ function App() {
                                 }
                             />
                             <Route
-                                path="/activate/:uid/:token"
+                                path="/activate/:activation_key"
                                 element={
                                     <Layout>
                                         <GuestRoute>

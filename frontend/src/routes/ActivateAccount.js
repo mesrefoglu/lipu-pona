@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Spinner, Alert, AlertIcon, Flex } from "@chakra-ui/react";
-import { confirmEmailApi } from "../api/endpoints.js";
-import { useLang } from "../contexts/useLang.js";
+
 import { COLOR_1 } from "../constants/constants.js";
+import { useLang } from "../contexts/useLang.js";
+import { confirmEmailApi } from "../api/endpoints.js";
 
 const ActivateAccount = () => {
-    const { uid, token } = useParams();
+    const { activation_key } = useParams();
     const navigate = useNavigate();
     const { t } = useLang();
     const [status, setStatus] = useState("loading");
 
     useEffect(() => {
-        confirmEmailApi(uid, token)
+        confirmEmailApi(activation_key)
             .then(({ success }) => {
                 setStatus(success ? "ok" : "error");
             })
             .catch(() => setStatus("error"));
-    }, [uid, token, navigate]);
+    }, [activation_key, navigate]);
 
     if (status === "loading") {
         return (

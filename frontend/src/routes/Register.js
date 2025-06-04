@@ -88,7 +88,6 @@ const Register = () => {
     const handleChange = (field) => (e) => {
         const val = e.target.value;
         setValues((v) => ({ ...v, [field]: val }));
-        console.log(`Errors:`, errors);
         if (field === "username") setUsernameTaken(false);
         if (field === "email") setEmailTaken(false);
     };

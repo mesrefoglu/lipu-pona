@@ -87,6 +87,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "https://lipupona.net",
+    "http://localhost:3000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

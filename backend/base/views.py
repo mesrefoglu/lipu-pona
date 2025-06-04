@@ -35,7 +35,7 @@ from .serializers import (
     PostSerializer,
     CommentSerializer,
 )
-from .pagination import FeedCursorPagination, CommentCursorPagination, DiscoverCursorPagination
+from .pagination import PostCursorPagination, CommentCursorPagination, DiscoverCursorPagination
 
 import logging
 import os
@@ -127,13 +127,14 @@ def PasswordResetRequest(request):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     reset_url = frontend_reset_url(uid, token)
-    send_mail(
+    sent_email = send_mail(
         subject="Password reset",
         message=f"Use the link below to reset your password:\n{reset_url}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=True,
     )
+    print("reset url:", reset_url)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["POST"])
@@ -224,7 +225,8 @@ def Register(request):
         recipient_list=[vd["email"]],
         fail_silently=True,
     )
-
+    
+    print("activation url:", activation_url)
     return Response({"success": True}, status=status.HTTP_201_CREATED)
 
 @api_view(["POST"])
@@ -511,7 +513,7 @@ def GetPosts(request, username):
 class UserPostsView(ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = FeedCursorPagination
+    pagination_class = PostCursorPagination
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
@@ -724,7 +726,7 @@ def CommentLikers(request, id):
 class FeedView(ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = FeedCursorPagination
+    pagination_class = PostCursorPagination
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
