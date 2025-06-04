@@ -67,10 +67,6 @@ class BasicUserSerializer(serializers.ModelSerializer):
         model  = MyUser
         fields = ["username", "first_name", "profile_picture"]
 
-class AccountActivationSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
-
 class PostSerializer(serializers.ModelSerializer):
     is_mine         = serializers.SerializerMethodField()
     username        = serializers.CharField(source='user.username', read_only=True)

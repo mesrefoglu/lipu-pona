@@ -7,12 +7,16 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import connection, IntegrityError
 from django.db.models import Count, Q, F, ExpressionWrapper, FloatField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Now, Extract
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from backend.utils import (
@@ -21,14 +25,13 @@ from backend.utils import (
     normalize_whitespace,
     normalize_name
 )
-from .models import MyUser, Post, Comment
+from .models import MyUser, PendingRegistration, Post, Comment
 from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     MyUserSerializer,
     BasicUserSerializer,
     UserRegisterSerializer,
-    AccountActivationSerializer,
     PostSerializer,
     CommentSerializer,
 )
@@ -36,6 +39,7 @@ from .pagination import FeedCursorPagination, CommentCursorPagination, DiscoverC
 
 import logging
 import os
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -112,25 +116,6 @@ def Authenticated(request):
 
 @api_view(["POST"])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
-def ActivateAccount(request):
-    serializer = AccountActivationSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    uidb64 = serializer.validated_data["uid"]
-    token = serializer.validated_data["token"]
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = MyUser.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, MyUser.DoesNotExist):
-        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
-    if not default_token_generator.check_token(user, token):
-        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
-    user.is_active = True
-    user.save()
-    return Response({"success": True}, status=status.HTTP_200_OK)
-
-@api_view(["POST"])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def PasswordResetRequest(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -143,10 +128,10 @@ def PasswordResetRequest(request):
     token = default_token_generator.make_token(user)
     reset_url = frontend_reset_url(uid, token)
     send_mail(
-        "Password reset",
-        f"Use the link below to reset your password:\n{reset_url}",
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
+        subject="Password reset",
+        message=f"Use the link below to reset your password:\n{reset_url}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
         fail_silently=True,
     )
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -164,9 +149,9 @@ def PasswordResetConfirm(request):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = MyUser.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, MyUser.DoesNotExist):
-        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": False, "error": "User does not exist..?"}, status=status.HTTP_400_BAD_REQUEST)
     if not default_token_generator.check_token(user, token):
-        return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": False, "error": "Token is invalid."}, status=status.HTTP_400_BAD_REQUEST)
     user.set_password(new_password)
     user.save()
     return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)
@@ -192,25 +177,95 @@ def Register(request):
     data['first_name'] = normalize_name(data.get('first_name', '')).strip()
 
     serializer = UserRegisterSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    vd = serializer.validated_data
+
     try:
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        user.is_active = False
-        user.save()
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        activation_url = frontend_email_activation_url(uid, token)
-        send_mail(
-            "Confirm your email",
-            f"Use the link below to confirm your email:\n{activation_url}",
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=True,
+        validate_password(vd["password"])
+    except ValidationError as e:
+        return Response({"error": [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
+
+    if MyUser.objects.filter(username=vd["username"], is_active=True).exists():
+        return Response(
+            {"username": ["A user with that username already exists."]},
+            status=status.HTTP_400_BAD_REQUEST,
         )
-        return Response({"success": True}, status=status.HTTP_201_CREATED)
-    except Exception as exc:
-        print(exc)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if MyUser.objects.filter(email=vd["email"], is_active=True).exists():
+        return Response(
+            {"email": ["A user with that email already exists."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    PendingRegistration.objects.filter(username=vd["username"]).delete()
+    PendingRegistration.objects.filter(email=vd["email"]).delete()
+
+    password_hash = make_password(vd["password"])
+
+    pending = PendingRegistration.objects.create(
+        username   = vd["username"],
+        first_name = vd["first_name"],
+        email      = vd["email"],
+        password   = password_hash,
+        created_at = timezone.now(),
+    )
+
+    activation_key = str(pending.activation_key)
+    activation_url = f"{settings.FRONTEND_URL.rstrip('/')}/activate/{activation_key}"
+
+    send_mail(
+        subject="Confirm your email",
+        message=(
+            "toki a!\n\n"
+            "Please click the link below to activate your lipu pona account:\n\n"
+            f"{activation_url}\n\n"
+            "If you did not request this, you can ignore this email. Your account is not in danger."
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[vd["email"]],
+        fail_silently=True,
+    )
+
+    return Response({"success": True}, status=status.HTTP_201_CREATED)
+
+@api_view(["POST"])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def ActivateAccount(request, activation_key: str):
+    try:
+        key_uuid = uuid.UUID(activation_key, version=4)
+    except ValueError:
+        return Response({"detail": "Invalid activation key."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        pending = PendingRegistration.objects.get(activation_key=key_uuid)
+    except PendingRegistration.DoesNotExist:
+        return Response({"detail": "Activation key not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    age = timezone.now() - pending.created_at
+    if age > timezone.timedelta(days=2):
+        pending.delete()
+        return Response({"detail": "Activation key expired."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if MyUser.objects.filter(username=pending.username, is_active=True).exists():
+        pending.delete()
+        return Response({"detail": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
+    if MyUser.objects.filter(email=pending.email, is_active=True).exists():
+        pending.delete()
+        return Response({"detail": "Email already taken."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = MyUser.objects.create(
+        username=pending.username,
+        first_name=pending.first_name,
+        email=pending.email,
+        password=pending.password,
+        is_active=True,
+        date_joined=timezone.now(),
+    )
+    user.save()
+    pending.delete()
+
+    serializer = MyUserSerializer(user, context={'request': request})
+    return Response({"success": True}, status=status.HTTP_201_CREATED)
+
     
 @api_view(['POST'])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])

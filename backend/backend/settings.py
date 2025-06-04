@@ -7,17 +7,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
-
 FRONTEND_URL       = env('FRONTEND_URL', default='http://lipupona.net')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@lipupona.net')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='toki@lipupona.net')
 EMAIL_BACKEND      = env(
     'DJANGO_EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend'
+    default='django.core.mail.backends.smtp.EmailBackend'
 )
+
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = env('SENDGRID_API_KEY', default='')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
-DEBUG = env.bool('DEBUG', default=False)
+DEBUG = True
 
 SENDGRID_API_KEY           = env('SENDGRID_API_KEY', default='')
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False
@@ -109,7 +114,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
-    'default': env.db()
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [

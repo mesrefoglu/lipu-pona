@@ -26,6 +26,17 @@ class MyUser(AbstractUser):
     def __str__(self):
         return self.username
 
+class PendingRegistration(models.Model):
+    activation_key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    username = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=150, blank=True)
+    password = models.CharField(max_length=128)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"PendingRegistration({self.username}, {self.email})"
+
 class Post(models.Model):
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(upload_to=post_upload_path, blank=True, null=True)
