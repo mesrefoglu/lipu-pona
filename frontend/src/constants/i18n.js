@@ -113,7 +113,7 @@ export const translations = {
         email_confirm_success: "lipu sina li pona! o kama lon insa.",
         email_confirm_error: "nasin ni li ike.",
         discover: "o lukin e ijo sin",
-        search_users_placeholder: "o alasa jan...",
+        search_users_placeholder: "o alasa e jan...",
         info: "sona",
         info_body:
             "lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.",

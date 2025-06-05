@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import { FiUpload, FiX } from "react-icons/fi";
 
-import { COLOR_1, COLOR_2, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_2, COLOR_3, COLOR_4, PASSWORD_REGEX } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
 import { useLang } from "../contexts/useLang.js";
 import { checkUsernameApi, editUserApi, deleteUserApi } from "../api/endpoints.js";
@@ -30,7 +30,6 @@ import ConfirmDialog from "../components/ConfirmDialogue.js";
 const MAX_CHARS = 250;
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
 const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW ]{0,50}$/;
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
 const checkForLength = (str, min, max) => str.length >= min && str.length <= max;
 
@@ -54,7 +53,7 @@ const getErrors = (fields, usernameTaken, t) => ({
         ? ""
         : !checkForLength(fields.newPassword, 8, 100)
         ? t("new_password_length")
-        : !passwordRegex.test(fields.newPassword)
+        : !PASSWORD_REGEX.test(fields.newPassword)
         ? t("new_password_complexity")
         : "",
     confirmPassword:

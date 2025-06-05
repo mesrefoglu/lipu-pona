@@ -14,12 +14,10 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_3, COLOR_4, PASSWORD_REGEX } from "../constants/constants.js";
 import { confirmPasswordResetApi } from "../api/endpoints.js";
 import { useAuth } from "../contexts/useAuth.js";
 import { useLang } from "../contexts/useLang.js";
-
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
 const ResetPassword = () => {
     const { uid, token } = useParams();
@@ -35,7 +33,7 @@ const ResetPassword = () => {
     const errors = {
         newPassword: !values.newPassword
             ? t("register_password_required")
-            : !passwordRegex.test(values.newPassword)
+            : !PASSWORD_REGEX.test(values.newPassword)
             ? t("register_password_length")
             : "",
         confirmPassword: !values.confirmPassword
