@@ -22,7 +22,7 @@ EMAIL_USE_TLS = True
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
-DEBUG = True
+DEBUG = env('DJANGO_DEBUG', default=False)
 
 SENDGRID_API_KEY           = env('SENDGRID_API_KEY', default='')
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False
