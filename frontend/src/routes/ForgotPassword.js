@@ -42,9 +42,9 @@ const ForgotPassword = () => {
         setLoading(false);
         toast({
             description: t("email_sent"),
+            position: "top",
             status: "success",
             duration: 10000,
-            position: "top",
             isClosable: true,
         });
         setEmail("");

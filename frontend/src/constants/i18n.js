@@ -6,7 +6,8 @@ export const translations = {
         likes: "ijo olin",
         no: "ala",
         comment_edited: "jan li ante e toki ni",
-        edit_success: "sitelen toki li ante!",
+        comment_edit_success: "sitelen toki li ante!",
+        post_edit_success: "sitelen toki li ante!",
         edit_error: "pilin ike: toki li ken ala ante.",
         delete_success: "toki li pakala!",
         delete_error: "pilin ike: toki li ken ala pakala.",
@@ -43,7 +44,7 @@ export const translations = {
         current_password_label: "nimi len pi tenpo ni",
         save_button: "o pana",
         username_required: "nimi lipu li wile.",
-        username_length: "nimi ilo li wile ja e 3-20 sitelen.",
+        username_length: "nimi ilo li wile jo e sitelen pi mute 3-20.",
         username_invalid_chars: "nimi lipu li wile ja e sitelen a-z, A-Z, 0-9.",
         username_taken: "nimi lipu ni li lon. o ante.",
         name_length: "nimi li wile ja e 0-50 sitelen.",
@@ -74,7 +75,7 @@ export const translations = {
         already_have_account: "sina sin anu seme?",
         login_link: "o kama lon insa",
         register_username_required: "nimi lipu li wile.",
-        register_username_length: "nimi ilo li wile ja e 3-20 sitelen.",
+        register_username_length: "nimi ilo li wile jo e sitelen pi mute 3-20.",
         register_username_format: "nimi lipu li wile ja e sitelen a-z, A-Z, 0-9.",
         register_username_taken: "nimi lipu ni li lon. o ante.",
         register_name_length: "nimi li wile ja e 0-50 sitelen.",
@@ -115,8 +116,12 @@ export const translations = {
         discover: "o lukin e ijo sin",
         search_users_placeholder: "o alasa e jan...",
         info: "sona",
-        info_body:
-            "lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.",
+        info_body: `lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.
+
+lipu pona li jo e suno open: `,
+        info_toki_pona: `
+
+o jo sona mute e toki pona: `,
         info_contact: `
 o toki tawa mi:
 discord: qedized
@@ -130,11 +135,15 @@ email: contact@qedized.com`,
         edit: "Edit",
         likes: "likes",
         no: "No",
-        comment_edited: "someone edited this comment",
-        edit_success: "Comment updated!",
-        edit_error: "Error: could not update comment.",
-        delete_success: "Comment deleted!",
-        delete_error: "Error: could not delete comment.",
+        comment_edited: "edited",
+        comment_edit_success: "Comment updated!",
+        post_edit_success: "Post updated!",
+        comment_edit_error: "Error: could not update comment.",
+        post_edit_error: "Error: could not update post.",
+        comment_delete_success: "Comment deleted!",
+        post_delete_success: "Post deleted!",
+        comment_delete_error: "Error: could not delete comment.",
+        post_delete_error: "Error: could not delete post.",
         confirm_delete_title: "Delete this comment?",
         confirm_delete_description: "This cannot be undone.",
         confirm_delete_confirm: "Delete",
@@ -212,7 +221,7 @@ email: contact@qedized.com`,
         register_password_format: "Password must contain at least one letter and one number.",
         register_confirm_required: "Please confirm your password.",
         register_confirm_mismatch: "Passwords do not match.",
-        register_error: "Something went wrong. Please try again.",
+        register_error: "Something went wrong. Try again with a different password.",
         reset_heading: "Reset your password",
         password_label_new: "New password",
         reset_success: "Password updated.",
@@ -241,12 +250,16 @@ email: contact@qedized.com`,
         discover: "Discover",
         search_users_placeholder: "Search users...",
         info: "Info",
-        info_body:
-            "lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.",
+        info_body: `lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.
+
+This website is open source: `,
+        info_toki_pona: `
+
+Learn more about toki pona: `,
         info_contact: `
 Contact me:
-discord: qedized
-email: contact@qedized.com`,
+Discord: qedized
+Email: contact@qedized.com`,
         email_cant_be_changed: "This cannot be edited.",
     },
 };

@@ -129,6 +129,7 @@ const Post = ({
         navigator.clipboard.writeText(url).then(() => {
             toast({
                 description: t("share_success"),
+                placement: "top",
                 status: "success",
                 duration: 2000,
             });
@@ -153,9 +154,9 @@ const Post = ({
         setSaving(true);
         try {
             await editPostApi(id, newText);
-            toast({ description: t("edit_success"), status: "success", duration: 2000 });
+            toast({ description: t("post_edit_success"), placement: "top", status: "success", duration: 2000 });
         } catch {
-            toast({ description: t("edit_error"), status: "error", duration: 2000 });
+            toast({ description: t("post_edit_error"), placement: "top", status: "error", duration: 2000 });
             setEditing(true);
             setDisplayText(lastText);
             setEdited(wasEdited);
@@ -170,11 +171,11 @@ const Post = ({
         try {
             await deletePostApi(id);
             setConfirmOpen(false);
-            toast({ description: t("delete_success"), status: "success", duration: 2000 });
+            toast({ description: t("post_delete_success"), placement: "top", status: "success", duration: 2000 });
             if (onDelete) onDelete(id);
             else navigate(`/${username}`);
         } catch {
-            toast({ description: t("delete_error"), status: "error", duration: 2000 });
+            toast({ description: t("post_delete_error"), placement: "top", status: "error", duration: 2000 });
         } finally {
             setDeleting(false);
         }

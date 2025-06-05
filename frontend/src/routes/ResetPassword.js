@@ -58,9 +58,9 @@ const ResetPassword = () => {
             await authLogin(username, values.newPassword);
             toast({
                 description: t("reset_success"),
+                position: "top",
                 status: "success",
                 duration: 10000,
-                position: "top",
                 isClosable: true,
             });
         } catch {
