@@ -116,14 +116,11 @@ export const translations = {
         discover: "o lukin e ijo sin",
         search_users_placeholder: "o alasa e jan...",
         info: "sona",
-        info_body: `lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.
-
-lipu pona li jo e suno open: `,
-        info_toki_pona: `
-
-o jo sona mute e toki pona: `,
-        info_contact: `
-o toki tawa mi:
+        info_body:
+            "lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.",
+        info_body2: "lipu pona li jo e suno open: ",
+        info_toki_pona: "o jo sona mute e toki pona: ",
+        info_contact: `o toki tawa mi:
 discord: qedized
 email: contact@qedized.com`,
         email_cant_be_changed: "sina ken ala ante e ni.",
@@ -156,7 +153,7 @@ email: contact@qedized.com`,
         post_error: "Error: could not create post.",
         add_image: "Add image",
         change_image: "Change image",
-        post_edited: "someone edited this post",
+        post_edited: "edited",
         comments: "comments",
         confirm_delete_title_post: "Delete this post?",
         likers_title_post: "These people liked this post",
@@ -250,16 +247,13 @@ email: contact@qedized.com`,
         discover: "Discover",
         search_users_placeholder: "Search users...",
         info: "Info",
-        info_body: `lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.
-
-This website is open source: `,
-        info_toki_pona: `
-
-Learn more about toki pona: `,
-        info_contact: `
-Contact me:
+        info_body:
+            "lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.",
+        info_body2: "This website is open source: ",
+        info_toki_pona: "Learn more about toki pona: ",
+        info_contact: `Contact me:
 Discord: qedized
 Email: contact@qedized.com`,
-        email_cant_be_changed: "This cannot be edited.",
+        email_cant_be_changed: "Email cannot be edited.",
     },
 };

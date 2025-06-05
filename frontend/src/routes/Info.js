@@ -15,6 +15,9 @@ const Info = () => {
 
                 <Text color={COLOR_4} whiteSpace="pre-wrap">
                     {t("info_body")}
+                    {`
+                    `}
+                    {t("info_body2")}
                     <Text as="span" color="teal.300">
                         <a href="https://github.com/mesrefoglu/lipu-pona">GitHub</a>
                     </Text>
@@ -22,7 +25,7 @@ const Info = () => {
                     `}
                     {t("info_toki_pona")}
                     <Text as="span" color="teal.300">
-                        <a href="https://tokipona.org/">https://tokipona.org/</a>
+                        <a href="https://tokipona.org">tokipona.org</a>
                     </Text>
                     {`
                     `}
