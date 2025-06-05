@@ -190,6 +190,7 @@ const Register = () => {
                             type="password"
                             value={values.password}
                             onChange={handleChange("password")}
+                            onBlur={() => handleBlur("password")}
                             autoComplete="new-password"
                         />
                         {touched.password && errors.password && <FormErrorMessage>{errors.password}</FormErrorMessage>}
@@ -203,6 +204,7 @@ const Register = () => {
                             type="password"
                             value={values.confirmPassword}
                             onChange={handleChange("confirmPassword")}
+                            onBlur={() => handleBlur("confirmPassword")}
                             autoComplete="new-password"
                         />
                         {touched.confirmPassword && errors.confirmPassword && (
@@ -210,7 +212,7 @@ const Register = () => {
                         )}
                     </FormControl>
 
-                    <FormControl id="accepted" isInvalid={touched.accepted && !!errors.accepted}>
+                    <FormControl id="accepted" isInvalid={!!errors.accepted}>
                         <Checkbox
                             isChecked={values.accepted}
                             onChange={(e) => setValues((v) => ({ ...v, accepted: e.target.checked }))}
@@ -226,7 +228,7 @@ const Register = () => {
                             </Link>
                             .
                         </Checkbox>
-                        {touched.accepted && errors.accepted && <FormErrorMessage>{errors.accepted}</FormErrorMessage>}
+                        {errors.accepted && <FormErrorMessage>{errors.accepted}</FormErrorMessage>}
                     </FormControl>
 
                     <Button
