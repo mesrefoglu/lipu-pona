@@ -138,9 +138,9 @@ const Comment = ({
         setSaving(true);
         try {
             await editCommentApi(id, newText);
-            toast({ description: t("comment_edit_success"), placement: "top", status: "success", duration: 2000 });
+            toast({ description: t("comment_edit_success"), position: "top", status: "success", duration: 2000 });
         } catch {
-            toast({ description: t("comment_edit_error"), placement: "top", status: "error", duration: 2000 });
+            toast({ description: t("comment_edit_error"), position: "top", status: "error", duration: 2000 });
             setDisplayText(lastText);
             setEdited(wasEdited);
             setEditing(true);
@@ -155,10 +155,10 @@ const Comment = ({
         try {
             await deleteCommentApi(id);
             setConfirmOpen(false);
-            toast({ description: t("comment_delete_success"), placement: "top", status: "success", duration: 2000 });
+            toast({ description: t("comment_delete_success"), position: "top", status: "success", duration: 2000 });
             if (onDelete) onDelete(id);
         } catch {
-            toast({ description: t("comment_delete_error"), placement: "top", status: "error", duration: 2000 });
+            toast({ description: t("comment_delete_error"), position: "top", status: "error", duration: 2000 });
         }
     };
 

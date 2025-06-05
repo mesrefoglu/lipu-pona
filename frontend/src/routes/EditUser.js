@@ -186,7 +186,7 @@ const EditUser = () => {
 
         toast({
             description: t("update_success"),
-            placement: "top",
+            position: "top",
             status: "success",
             duration: 5000,
         });
@@ -430,7 +430,7 @@ const EditUser = () => {
                         navigate("/account/login");
                         toast({
                             description: t("delete_account_success"),
-                            placement: "top",
+                            position: "top",
                             status: "success",
                             duration: 5000,
                             isClosable: true,
