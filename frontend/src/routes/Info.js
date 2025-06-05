@@ -15,20 +15,23 @@ const Info = () => {
 
                 <Text color={COLOR_4} whiteSpace="pre-wrap">
                     {t("info_body")}
-                    {`
-                    `}
-                    {t("info_body2")}
+                </Text>
+
+                <Text color={COLOR_4} whiteSpace="pre-wrap">
+                    {t("info_open_source")}
                     <Text as="span" color="teal.300">
                         <a href="https://github.com/mesrefoglu/lipu-pona">GitHub</a>
                     </Text>
-                    {`
-                    `}
+                </Text>
+
+                <Text color={COLOR_4} whiteSpace="pre-wrap">
                     {t("info_toki_pona")}
                     <Text as="span" color="teal.300">
                         <a href="https://tokipona.org">tokipona.org</a>
                     </Text>
-                    {`
-                    `}
+                </Text>
+
+                <Text color={COLOR_4} whiteSpace="pre-wrap">
                     {t("info_contact")}
                 </Text>
 

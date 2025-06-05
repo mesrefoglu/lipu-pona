@@ -118,7 +118,7 @@ export const translations = {
         info: "sona",
         info_body:
             "lipu pona li lipu kulupu. mi pali e ona tawa kulupu pi toki pona. lipu li pona la, mi wile. jan li ken pana e sitelen nimi e sitelen nimi. jan li ken toki e kulupu pona.",
-        info_body2: "lipu pona li jo e suno open: ",
+        info_open_source: "lipu pona li jo e suno open: ",
         info_toki_pona: "o jo sona mute e toki pona: ",
         info_contact: `o toki tawa mi:
 discord: qedized
@@ -249,7 +249,7 @@ email: contact@qedized.com`,
         info: "Info",
         info_body:
             "lipu pona is a social media platform designed for the toki pona community. The main focus is on simplicity and ease of use, allowing users to share their thoughts, images, and connect with others in a friendly environment.",
-        info_body2: "This website is open source: ",
+        info_open_source: "This website is open source: ",
         info_toki_pona: "Learn more about toki pona: ",
         info_contact: `Contact me:
 Discord: qedized
