@@ -34,10 +34,16 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class MyUserSerializer(serializers.ModelSerializer):
+    email           = serializers.EmailField(read_only=True)
     post_count      = serializers.SerializerMethodField()
     follower_count  = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
 
+    def get_email(self, obj):
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated and request.user == obj:
+            return obj.email
+        return None
     def get_post_count(self, obj):
         return obj.posts.count()
     def get_follower_count(self, obj):
@@ -48,6 +54,7 @@ class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = [
+            'email',
             'username',
             'first_name',
             'bio',
@@ -57,6 +64,7 @@ class MyUserSerializer(serializers.ModelSerializer):
             'following_count',
         ]
         read_only_fields = [
+            'email',
             'post_count',
             'follower_count',
             'following_count',

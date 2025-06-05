@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import { FiUpload, FiX } from "react-icons/fi";
 
-import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
+import { COLOR_1, COLOR_2, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
 import { useLang } from "../contexts/useLang.js";
 import { checkUsernameApi, editUserApi, deleteUserApi } from "../api/endpoints.js";
@@ -74,6 +74,7 @@ const EditUser = () => {
     const navigate = useNavigate();
 
     const [values, setValues] = useState({
+        email: user?.email || "",
         username: user?.username || "",
         name: user?.first_name || "",
         bio: user?.bio || "",
@@ -197,9 +198,19 @@ const EditUser = () => {
             <Flex minH="85vh" align="center" justify="center" px={4}>
                 <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
                     <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit} align="flex-start">
-                        <Heading size="lg" textAlign="center" color={COLOR_1}>
+                        <Heading size="lg" textAlign="center" mx="auto" color={COLOR_1}>
                             {t("edit_profile_heading")}
                         </Heading>
+                        <FormControl id="email">
+                            <FormLabel color={COLOR_1}>{t("email_label")}</FormLabel>
+                            <Input
+                                borderColor="gray.400"
+                                _hover={{ borderColor: COLOR_3 }}
+                                value={values.email}
+                                isDisabled
+                            />
+                            <FormErrorMessage color={COLOR_2}>${t("email_cant_be_changed")}</FormErrorMessage>
+                        </FormControl>
 
                         <FormControl id="username" isInvalid={touched.username && !!errors.username}>
                             <FormLabel color={COLOR_1}>{t("username_label")}</FormLabel>

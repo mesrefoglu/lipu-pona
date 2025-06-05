@@ -121,6 +121,7 @@ export const translations = {
 o toki tawa mi:
 discord: qedized
 email: contact@qedized.com`,
+        email_cant_be_changed: "sina ken ala ante e ni.",
     },
 
     en: {
@@ -246,5 +247,6 @@ email: contact@qedized.com`,
 Contact me:
 discord: qedized
 email: contact@qedized.com`,
+        email_cant_be_changed: "This cannot be edited.",
     },
 };
