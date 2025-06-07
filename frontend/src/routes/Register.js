@@ -174,6 +174,7 @@ const Register = () => {
                             borderColor="gray.400"
                             _hover={{ borderColor: COLOR_3 }}
                             type="email"
+                            placeholder={t("email_placeholder")}
                             value={values.email}
                             onChange={handleChange("email")}
                             onBlur={() => handleBlur("email")}

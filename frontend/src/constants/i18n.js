@@ -124,6 +124,7 @@ export const translations = {
 discord: qedized
 email: contact@qedized.com`,
         email_cant_be_changed: "sina ken ala ante e ni.",
+        email_placeholder: "nimi@kulupu.ijo",
     },
 
     en: {
@@ -255,5 +256,6 @@ email: contact@qedized.com`,
 Discord: qedized
 Email: contact@qedized.com`,
         email_cant_be_changed: "Email cannot be edited.",
+        email_placeholder: "name@domain.tld",
     },
 };

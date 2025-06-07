@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
-FRONTEND_URL       = env('FRONTEND_URL', default='http://lipupona.net')
+FRONTEND_URL       = env('FRONTEND_URL', default='https://lipupona.net')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='toki@lipupona.net')
 EMAIL_BACKEND      = env(
     'DJANGO_EMAIL_BACKEND',
@@ -132,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'ET'
 
 USE_I18N = True
 
