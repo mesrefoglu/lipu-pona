@@ -1,8 +1,7 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Fairfax HD', 'Fairfax PUA', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+  'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -14,4 +13,35 @@ code {
 
 html, body {
   overflow-x: hidden;
+}
+
+@font-face {
+  font-family: 'Fairfax PUA';
+  /* adjust these URLs to point at wherever you put the .woff2/.ttf/etc */
+  src: url('/fonts/FairfaxPonaHD.woff2') format('woff2'),
+       url('/fonts/FairfaxPonaHD.ttf')   format('truetype');
+  /* only apply to U+F1900–U+F19FF */
+  unicode-range: U+F1900-F19FF;
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Fairfax HD';
+  src: url('/fonts/FairfaxHD.woff2') format('woff2'),
+       url('/fonts/FairfaxHD.ttf')   format('truetype');
+  /* everything except the PUA block */
+  unicode-range: U+0000-2FFF, U+3000-DFFF, U+F1A00-FFFF;
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Fairfax HD';
+  src: url('/fonts/FairfaxHD.woff2') format('woff2'),
+       url('/fonts/FairfaxHD.ttf')   format('truetype');
+  /* everything except the PUA block */
+  unicode-range: U+0000-2FFF, U+3000-DFFF, U+F1A00-FFFF;
+  font-weight: normal;
+  font-style: normal;
 }
