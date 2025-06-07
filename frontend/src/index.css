@@ -1,7 +1,7 @@
 body {
   margin: 0;
-  font-family: FairfaxHD, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-  'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'FairfaxHD'/*, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+  'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif*/;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -16,8 +16,8 @@ html, body {
 }
 
 @font-face {
-  src: url('/public/fonts/FairfaxHD.woff2') format('woff2');
-  font-family: FairfaxHD;
+  src: url('/fonts/FairfaxHD.woff2') format('woff2');
+  font-family: 'FairfaxHD';
   /*unicode-range: U+F1900-F19FF;*/
   font-weight: normal;
   font-style: normal;
