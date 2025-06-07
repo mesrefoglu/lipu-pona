@@ -2,6 +2,7 @@ import "./App.css";
 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
+import theme from "./constants/theme.js";
 
 import Layout from "./components/Layout.js";
 import PrivateRoute from "./components/PrivateRoute.js";
@@ -27,7 +28,7 @@ import CookiesNotice from "./routes/legal/Cookies.js";
 
 function App() {
     return (
-        <ChakraProvider>
+        <ChakraProvider theme={theme}>
             <LangProvider>
                 <Router>
                     <AuthProvider>
