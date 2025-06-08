@@ -3,6 +3,9 @@ import { extendTheme } from "@chakra-ui/react";
 const theme = extendTheme({
     styles: {
         global: {
+            "html, body": {
+                overflowX: "hidden",
+            },
             "@font-face": {
                 fontFamily: "FairfaxHD",
                 src: "url('/fonts/FairfaxHD.woff2') format('woff2')",
