@@ -18,13 +18,12 @@ const Navbar = () => {
     const { lang, t, toggle } = useLang();
     const [open, setOpen] = useState(false);
 
-    const navHeight = useBreakpointValue({ base: "40px", md: "50px" });
     const paddingX = useBreakpointValue({ base: 3, md: 6 });
     const logoFontSize = useBreakpointValue({ base: "xl", md: "2xl" });
     const stackSpace = useBreakpointValue({ base: 2, md: 4 });
     const labelFont = useBreakpointValue({ base: "sm", md: "md" });
     const labelMargin = useBreakpointValue({ base: 1, md: 2 });
-    const iconSize = useBreakpointValue({ base: 30, md: 40 });
+    const iconSize = useBreakpointValue({ base: 33, md: 40 });
 
     const goHome = () => navigate("/");
     const goProfile = () => (user?.username ? navigate(`/${user.username}`) : navigate("/account/login"));
@@ -32,7 +31,7 @@ const Navbar = () => {
     return (
         <Flex
             w="100%"
-            h={navHeight}
+            h="50px"
             bg={COLOR_3}
             justify="space-between"
             align="center"
