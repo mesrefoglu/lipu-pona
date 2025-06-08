@@ -6,6 +6,7 @@ const theme = extendTheme({
             "@font-face": {
                 fontFamily: "FairfaxHD",
                 src: "url('/fonts/FairfaxHD.woff2') format('woff2')",
+                unicodeRange: "U+F1900-F19FF",
                 fontWeight: "normal",
                 fontStyle: "normal",
             },
