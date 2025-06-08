@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Flex, HStack, Text } from "@chakra-ui/react";
+import { Flex, HStack, Text, useBreakpointValue } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
@@ -18,25 +18,33 @@ const Navbar = () => {
     const { lang, t, toggle } = useLang();
     const [open, setOpen] = useState(false);
 
+    const navHeight = useBreakpointValue({ base: "40px", md: "50px" });
+    const paddingX = useBreakpointValue({ base: 3, md: 6 });
+    const logoFontSize = useBreakpointValue({ base: "xl", md: "2xl" });
+    const stackSpace = useBreakpointValue({ base: 2, md: 4 });
+    const labelFont = useBreakpointValue({ base: "sm", md: "md" });
+    const labelMargin = useBreakpointValue({ base: 1, md: 2 });
+    const iconSize = useBreakpointValue({ base: 30, md: 40 });
+
     const goHome = () => navigate("/");
     const goProfile = () => (user?.username ? navigate(`/${user.username}`) : navigate("/account/login"));
 
     return (
         <Flex
-            w="100vw"
-            h="50px"
+            w="100%"
+            h={navHeight}
             bg={COLOR_3}
-            justifyContent="space-between"
-            alignItems="center"
-            px={6}
+            justify="space-between"
+            align="center"
+            px={paddingX}
             position="relative"
             overflow="visible"
         >
-            <Text fontSize="2xl" fontWeight="bold" color={COLOR_1} onClick={goHome} cursor="pointer">
+            <Text fontSize={logoFontSize} fontWeight="bold" color={COLOR_1} onClick={goHome} cursor="pointer">
                 lipu pona
             </Text>
 
-            <HStack spacing={4} alignItems="center">
+            <HStack spacing={stackSpace} align="center">
                 <AnimatePresence>
                     {open && (
                         <MotionBox
@@ -57,15 +65,15 @@ const Navbar = () => {
                         </MotionBox>
                     )}
                 </AnimatePresence>
-                <HStack spacing={1} cursor="pointer" onClick={toggle}>
-                    <Text color={COLOR_1} fontSize="sm" fontWeight="bold" mr={2}>
+                <HStack spacing={labelMargin} cursor="pointer" onClick={toggle}>
+                    <Text color={COLOR_1} fontSize={labelFont} fontWeight="bold">
                         {lang === "tp" ? t("lang_tp") : t("lang_en")}
                     </Text>
-                    <FiGlobe size="40px" />
+                    <FiGlobe size={iconSize} />
                 </HStack>
-                <FiHelpCircle size="40px" onClick={() => navigate("/site/info")} cursor="pointer" />
-                <FiSearch size="40px" onClick={() => setOpen((v) => !v)} cursor="pointer" />
-                <CgProfile size="40px" onClick={goProfile} cursor="pointer" />
+                <FiHelpCircle size={iconSize} onClick={() => navigate("/site/info")} cursor="pointer" />
+                <FiSearch size={iconSize} onClick={() => setOpen((v) => !v)} cursor="pointer" />
+                <CgProfile size={iconSize} onClick={goProfile} cursor="pointer" />
             </HStack>
         </Flex>
     );
