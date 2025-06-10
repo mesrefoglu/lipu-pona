@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -20,12 +20,18 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from backend.utils import (
-    frontend_email_activation_url,
     frontend_reset_url,
     normalize_whitespace,
-    normalize_name
+    normalize_name,
 )
-from .models import MyUser, PendingRegistration, Post, Comment
+from .models import (
+    MyUser,
+    PendingRegistration,
+    Post,
+    Comment,
+    FollowRequest,
+    Notification,
+)
 from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
@@ -34,14 +40,54 @@ from .serializers import (
     UserRegisterSerializer,
     PostSerializer,
     CommentSerializer,
+    FollowRequestSerializer,
+    NotificationSerializer,
 )
-from .pagination import PostCursorPagination, CommentCursorPagination, DiscoverCursorPagination
+from .pagination import (
+    PostCursorPagination,
+    CommentCursorPagination,
+    DiscoverCursorPagination,
+    FollowRequestPagination,
+    NotificationPagination,
+)
 
 import logging
 import os
 import uuid
 
 logger = logging.getLogger(__name__)
+
+def DeleteRecentNotification(recipient, actor, verb, target_post_id=None):
+    new_notification = Notification.objects.filter(
+        recipient=recipient,
+        actor=actor,
+        verb=verb,
+        target_post_id=target_post_id,
+        created_at__gte=timezone.now() - timezone.timedelta(hours=1)
+    ).first()
+    if new_notification:
+        new_notification.delete()
+
+def CreateNotification(recipient, actor, verb, target_post_id=None):
+    return Notification.objects.create(
+        recipient=recipient,
+        actor=actor,
+        verb=verb,
+        target_post_id=target_post_id,
+    )
+
+def CheckForMentions(text, user, is_post, post_id):
+    if '@' in text:
+        mentioned_usernames = set(part[1:] for part in text.split() if part.startswith('@'))
+        mentioned_users = MyUser.objects.filter(username__in=mentioned_usernames)
+        for mentioned_user in mentioned_users:
+            if mentioned_user != user and mentioned_user.notify_mention and (not mentioned_user.private or user in mentioned_user.followers.all()):
+                CreateNotification(
+                    mentioned_user,
+                    user,
+                    Notification.VERB_MENTION_POST if is_post else Notification.VERB_MENTION_COMMENT,
+                    post_id,
+                )
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
@@ -51,9 +97,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             parent_resp = super().post(request, *args, **kwargs)
             access = parent_resp.data["access"]
             refresh = parent_resp.data["refresh"]
-        except Exception:
+        except Exception as e:
             logger.exception("JWT login failed")
-            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "JWT login failed." + str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
         resp = Response({"success": True})
         resp.set_cookie(
@@ -80,16 +126,16 @@ class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
-            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Refresh token not found."}, status=status.HTTP_401_UNAUTHORIZED)
 
         request.data["refresh"] = refresh_token
         try:
             parent_resp = super().post(request, *args, **kwargs)
             access = parent_resp.data["access"]
             refresh = parent_resp.data.get("refresh")
-        except Exception:
+        except Exception as e:
             logger.exception("JWT refresh failed")
-            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "JWT refresh failed. " + str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
         resp = Response({"success": True})
         resp.set_cookie(
@@ -127,14 +173,15 @@ def PasswordResetRequest(request):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     reset_url = frontend_reset_url(uid, token)
-    sent_email = send_mail(
+    send_mail(
         subject="Password reset",
         message=f"Use the link below to reset your password:\n{reset_url}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=True,
     )
-    print("reset url:", reset_url)
+    if settings.DEBUG:
+        print("reset url:", reset_url)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["POST"])
@@ -150,9 +197,9 @@ def PasswordResetConfirm(request):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = MyUser.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, MyUser.DoesNotExist):
-        return Response({"success": False, "error": "User does not exist..?"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "User does not exist..?"}, status=status.HTTP_400_BAD_REQUEST)
     if not default_token_generator.check_token(user, token):
-        return Response({"success": False, "error": "Token is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Token is invalid."}, status=status.HTTP_400_BAD_REQUEST)
     user.set_password(new_password)
     user.save()
     return Response({"success": True, "username": user.username}, status=status.HTTP_200_OK)
@@ -225,8 +272,8 @@ def Register(request):
         recipient_list=[vd["email"]],
         fail_silently=True,
     )
-    
-    print("activation url:", activation_url)
+    if settings.DEBUG:
+        print("activation url:", activation_url)
     return Response({"success": True}, status=status.HTTP_201_CREATED)
 
 @api_view(["POST"])
@@ -235,24 +282,24 @@ def ActivateAccount(request, activation_key: str):
     try:
         key_uuid = uuid.UUID(activation_key, version=4)
     except ValueError:
-        return Response({"detail": "Invalid activation key."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Invalid activation key."}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         pending = PendingRegistration.objects.get(activation_key=key_uuid)
     except PendingRegistration.DoesNotExist:
-        return Response({"detail": "Activation key not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Activation key not found."}, status=status.HTTP_404_NOT_FOUND)
     
     age = timezone.now() - pending.created_at
     if age > timezone.timedelta(days=2):
         pending.delete()
-        return Response({"detail": "Activation key expired."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Activation key expired."}, status=status.HTTP_400_BAD_REQUEST)
     
     if MyUser.objects.filter(username=pending.username, is_active=True).exists():
         pending.delete()
-        return Response({"detail": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
     if MyUser.objects.filter(email=pending.email, is_active=True).exists():
         pending.delete()
-        return Response({"detail": "Email already taken."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Email already taken."}, status=status.HTTP_400_BAD_REQUEST)
     
     user = MyUser.objects.create(
         username=pending.username,
@@ -265,7 +312,7 @@ def ActivateAccount(request, activation_key: str):
     user.save()
     pending.delete()
 
-    serializer = MyUserSerializer(user, context={'request': request})
+    MyUserSerializer(user, context={'request': request})
     return Response({"success": True}, status=status.HTTP_201_CREATED)
 
     
@@ -334,6 +381,9 @@ def Followers(request, username):
         user = MyUser.objects.get(username=username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
+    
+    if user.private and request.user not in user.followers.all():
+        return Response({"error": "This user has a private profile."}, status=403)
 
     followers_qs = (
         user.followers.all()
@@ -356,6 +406,9 @@ def Following(request, username):
         user = MyUser.objects.get(username=username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
+    
+    if user.private and request.user not in user.followers.all():
+        return Response({"error": "This user has a private profile."}, status=403)
 
     following_qs = (
         user.following.all()
@@ -375,30 +428,114 @@ def Following(request, username):
 def ToggleFollow(request):
     target_username = request.data.get("username")
     if not target_username:
-        return Response(
-            {"detail": "username missing"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Username missing."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        target_user = MyUser.objects.get(username=target_username)
+        target = MyUser.objects.get(username=target_username)
     except MyUser.DoesNotExist:
-        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    user = request.user
+
+    if user == target:
+        return Response({"error": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if user in target.followers.all():
+        target.followers.remove(user)
+        DeleteRecentNotification(target, user, Notification.VERB_FOLLOW)
+        return Response({"success": True, "following": False})
 
     try:
-        if request.user in target_user.followers.all():
-            target_user.followers.remove(request.user)
-            following = False
+        if target.private:
+            fr = FollowRequest.objects.filter(requester=user, target=target).first()
+            if fr:
+                fr.delete()
+                return Response({"success": True, "requested": False}, status=status.HTTP_200_OK)
+            FollowRequest.objects.create(requester=user, target=target)
+            return Response({"success": True, "requested": True}, status=status.HTTP_201_CREATED)
         else:
-            target_user.followers.add(request.user)
-            following = True
+            target.followers.add(user)
+            if target.notify_follow:
+                CreateNotification(target, user, Notification.VERB_FOLLOW)
+            return Response({"success": True, "following": True})
     except IntegrityError:
-        logger.exception("DB error while toggling follow")
-        return Response(
-            {"detail": "Could not update follow status."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return Response({"error": "Could not update follow status."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response({"success": True, "following": following})
+class FollowRequestListView(ListAPIView):
+    serializer_class = FollowRequestSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = FollowRequestPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.private:
+            return FollowRequest.objects.none()
+        return FollowRequest.objects.filter(target=self.request.user).order_by('-created_at')
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def RespondFollowRequest(request, id):
+    action = request.data.get('action')
+    if action not in ('accept', 'reject'):
+        return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        fr = FollowRequest.objects.get(pk=id, target=request.user)
+    except FollowRequest.DoesNotExist:
+        return Response({"error": "Follow request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if action == 'accept':
+        request.user.followers.add(fr.requester)
+        CreateNotification(fr.requester, request.user, Notification.VERB_FR_ACCEPTED)
+        if request.user.notify_follow:
+            CreateNotification(request.user, fr.requester, Notification.VERB_FOLLOW)
+    fr.delete()
+
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def AcceptAllFollowRequests(request):
+    user = request.user
+    if not user.private:
+        return Response({"error": "You do not have a private profile."}, status=status.HTTP_403_FORBIDDEN)
+
+    follow_requests = FollowRequest.objects.filter(target=user)
+
+    for fr in follow_requests:
+        user.followers.add(fr.requester)
+        CreateNotification(fr.requester, user, Notification.VERB_FR_ACCEPTED)
+        if user.notify_follow:
+            CreateNotification(user, fr.requester, Notification.VERB_FOLLOW)
+        fr.delete()
+
+    return Response({"success": True, "accepted": True}, status=status.HTTP_200_OK)
+
+class NotificationListView(ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = NotificationPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user).order_by('-id')
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def MarkNotificationsRead(request):
+    ids = request.data.get('ids')
+    qs = Notification.objects.filter(recipient=request.user, read=False)
+    if ids == 'all':
+        qs.update(read=True)
+    elif isinstance(ids, list):
+        qs.filter(id__in=ids).update(read=True)
+    else:
+        return Response({"error": "invalid ids"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -419,7 +556,7 @@ def EditUser(request):
     serializer = MyUserSerializer(user, data, partial=True)
 
     if not serializer.is_valid():
-        return Response({"error": serializer.errors, "success": False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
     if new_password:
         if not current_password or not user.check_password(current_password):
@@ -468,8 +605,12 @@ def DeleteUser(request):
             if id_fragment in filename:
                 try:
                     os.remove(os.path.join(root, filename))
-                except Exception:
+                except Exception as e:
                     logger.exception("Could not delete media file")
+                    resp = Response(
+                        {"error": "Could not delete media files. Contact support."},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
 
     user.delete()
     return resp
@@ -483,30 +624,13 @@ def GetPost(request, id):
     except Post.DoesNotExist:
         return Response({"error": "Post not found."}, status=404)
 
+    if post.user.private and request.user not in post.user.followers.all():
+        return Response({"error": "This user has a private profile."}, status=403)
+
     serializer = PostSerializer(post, context={'request': request})
 
     data = serializer.data
     data['is_liked'] = request.user in post.likes.all()
-
-    return Response(data)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def GetPosts(request, username):
-    try:
-        user = MyUser.objects.get(username=username)
-    except MyUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=404)
-    
-    posts = user.posts.all().order_by('-id')
-    serializer = PostSerializer(posts, many=True, context={'request': request})
-
-    data = []
-
-    for post in serializer.data:
-        post['is_liked'] = request.user in Post.objects.get(id=post['id']).likes.all()
-        data.append(post)
 
     return Response(data)
 
@@ -523,6 +647,9 @@ class UserPostsView(ListAPIView):
         except MyUser.DoesNotExist:
             raise NotFound(detail="User not found.")
         
+        if user.private and self.request.user not in user.followers.all():
+            raise PermissionDenied(detail="This user has a private profile.")
+        
         return user.posts.all().order_by('-id')
 
 @api_view(['POST'])
@@ -531,9 +658,12 @@ class UserPostsView(ListAPIView):
 def CreatePost(request):
     data = request.data.copy()
     data['text'] = normalize_whitespace(data.get('text', '')).strip()
-    serializer = PostSerializer(data=request.data, context={'request': request})
+
+    serializer = PostSerializer(data=data, context={'request': request})
     serializer.is_valid(raise_exception=True)
     serializer.save(user=request.user)
+
+    CheckForMentions(data['text'], request.user, is_post=True, post_id=serializer.instance.id)
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -542,13 +672,18 @@ def CreatePost(request):
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def EditPost(request, id):
     post = Post.objects.filter(id=id).first()
+
     if not post:
         return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
     data = request.data.copy()
     data['text'] = normalize_whitespace(data.get('text', '')).strip()
-    serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
+    serializer = PostSerializer(post, data=data, partial=True, context={'request': request})
     serializer.is_valid(raise_exception=True)
     serializer.save(edited=True)
+
+    CheckForMentions(data['text'], request.user, is_post=True, post_id=id)
+
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])
@@ -572,20 +707,22 @@ def DeletePost(request, id):
 def ToggleLike(request):
     post_id = request.data.get("id")
     if not post_id:
-        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST
+        return Response({"error": "id missing"}, status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
-        return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.user in post.likes.all():
         post.likes.remove(request.user)
         liked = False
+        DeleteRecentNotification(post.user, request.user, Notification.VERB_LIKE, target_post_id=post_id)
     else:
         post.likes.add(request.user)
         liked = True
+        CreateNotification(post.user, request.user, Notification.VERB_LIKE, target_post_id=post_id)
 
     return Response({"success": True, "liked": liked})
 
@@ -643,6 +780,8 @@ def CreateComment(request):
     serializer.is_valid(raise_exception=True)
     serializer.save(user=request.user, post=post)
 
+    CheckForMentions(data['text'], request.user, is_post=False, post_id=post_id)
+
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
@@ -662,6 +801,8 @@ def EditComment(request, id):
     serializer = CommentSerializer(comment, data=data, partial=True, context={'request': request})
     serializer.is_valid(raise_exception=True)
     serializer.save(edited=True)
+
+    CheckForMentions(data['text'], request.user, is_post=False, post_id=comment.post.id)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -686,12 +827,12 @@ def DeleteComment(request, id):
 def ToggleCommentLike(request):
     comment_id = request.data.get("id")
     if not comment_id:
-        return Response({"detail": "id missing"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "id missing"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         comment = Comment.objects.get(id=comment_id)
     except Comment.DoesNotExist:
-        return Response({"detail": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.user in comment.likes.all():
         comment.likes.remove(request.user)
@@ -765,7 +906,7 @@ class DiscoverView(ListAPIView):
                 age_minutes=age_minutes,
                 score=score_expr,
             )
-        
+
         return (
             annotated.order_by("-score", "-id")
         )

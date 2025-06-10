@@ -13,7 +13,7 @@ import {
     AlertIcon,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
@@ -23,7 +23,6 @@ const Login = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const navigate = useNavigate();
     const { authLogin } = useAuth();
     const { t } = useLang();
 
@@ -31,8 +30,7 @@ const Login = () => {
         e.preventDefault();
         setError("");
         try {
-            const me = await authLogin(username, password);
-            navigate(`/${me.username}`);
+            await authLogin(username, password);
         } catch {
             setError(t("login_error"));
         }
