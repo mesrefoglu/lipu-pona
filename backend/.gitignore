@@ -6,3 +6,4 @@ credentials.txt
 /media
 /staticfiles
 *.sqlite3
+__pycache__
