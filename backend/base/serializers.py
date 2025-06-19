@@ -106,7 +106,11 @@ class PostSerializer(serializers.ModelSerializer):
             'image', 'text', 'created_at', 'formatted_date',
             'like_count', 'is_liked', 'comment_count', 'is_edited',
         ]
-        read_only_fields = fields.copy()
+        read_only_fields = [
+            'id', 'is_mine', 'username', 'name', 'profile_picture',
+            'created_at', 'formatted_date', 'like_count',
+            'is_liked', 'comment_count', 'is_edited',
+        ]
 
 class CommentSerializer(serializers.ModelSerializer):
     is_mine = serializers.SerializerMethodField()
@@ -142,7 +146,11 @@ class CommentSerializer(serializers.ModelSerializer):
             'text', 'created_at', 'formatted_date',
             'like_count', 'is_liked', 'is_edited',
         ]
-        read_only_fields = fields.copy()
+        read_only_fields = [
+            'id', 'is_mine', 'username', 'name', 'profile_picture',
+            'created_at', 'formatted_date',
+            'like_count', 'is_liked', 'is_edited',
+        ]
 
 class FollowRequestSerializer(serializers.ModelSerializer):
     requester = BasicUserSerializer(read_only=True)
@@ -150,7 +158,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowRequest
         fields = ['id', 'requester', 'created_at']
-        read_only_fields = ['id', 'requester', 'created_at']
+        read_only_fields = fields.copy()
 
 class NotificationSerializer(serializers.ModelSerializer):
     actor = BasicUserSerializer(read_only=True)
@@ -158,7 +166,5 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = [
-            'id', 'actor', 'verb', 'target_post_id', 'read', 'created_at',
-        ]
+        fields = ['id', 'actor', 'verb', 'target_post_id', 'read', 'created_at']
         read_only_fields = ['id', 'actor', 'verb', 'target_post_id', 'created_at']
