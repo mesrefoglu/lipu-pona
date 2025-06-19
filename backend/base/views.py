@@ -523,6 +523,15 @@ class NotificationListView(ListAPIView):
     def get_queryset(self):
         return Notification.objects.filter(recipient=self.request.user).order_by('-id')
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
+def GetLastNotifications(request):
+    last_notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:5]
+    unread_count = Notification.objects.filter(recipient=request.user, read=False).count()
+    serializer = NotificationSerializer(last_notifications, many=True, context={'request': request})
+    return Response({"unread_count": unread_count, "notifications": serializer.data}, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])

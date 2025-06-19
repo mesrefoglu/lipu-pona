@@ -98,6 +98,36 @@ export const followApi = async (username) => {
     return response.data;
 };
 
+export const followRequestApi = async (username) => {
+    const response = await api.post("/follow-requests/", { username: username });
+    return response.data;
+};
+
+export const respondFollowRequestApi = async (id, action) => {
+    const response = await api.post(`/follow-requests/respond/${id}/`, { action: action });
+    return response.data;
+};
+
+export const acceptAllFollowRequestsApi = async () => {
+    const response = await api.post("/follow-requests/respond/all/");
+    return response.data;
+};
+
+export const getNotificationsApi = async () => {
+    const response = await api.get("/notifications/");
+    return response.data;
+};
+
+export const getLastNotificationsApi = async () => {
+    const response = await api.get("/notifications/last/");
+    return response.data;
+};
+
+export const markNotificationsReadApi = async () => {
+    const response = await api.post("/notifications/mark-read/");
+    return response.data;
+};
+
 export const editUserApi = async ({ username, name, bio, imageFile, removedPicture, newPassword, currentPassword }) => {
     const formData = new FormData();
     formData.append("username", username);

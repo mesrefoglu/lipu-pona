@@ -71,8 +71,8 @@ const Navbar = () => {
                     <FiGlobe size={iconSize} />
                 </HStack>
                 <FiHelpCircle size={iconSize} onClick={() => navigate("/site/info")} cursor="pointer" />
-                <FiSearch size={iconSize} onClick={() => setOpen((v) => !v)} cursor="pointer" />
-                <CgProfile size={iconSize} onClick={goProfile} cursor="pointer" />
+                {user && <FiSearch size={iconSize} onClick={() => setOpen((v) => !v)} cursor="pointer" />}
+                {user && <CgProfile size={iconSize} onClick={goProfile} cursor="pointer" />}
             </HStack>
         </Flex>
     );
