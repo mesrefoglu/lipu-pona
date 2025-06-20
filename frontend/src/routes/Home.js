@@ -50,7 +50,7 @@ const Home = () => {
     );
 
     return (
-        <Box maxW="container.sm" mx="auto" p={2}>
+        <Box maxW="container.sm" mx="auto" p={4}>
             <HStack spacing={4} justify="center" mb={4}>
                 <Button
                     variant={tab === "following" ? "solid" : "ghost"}

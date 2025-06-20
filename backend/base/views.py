@@ -69,6 +69,8 @@ def DeleteRecentNotification(recipient, actor, verb, target_post_id=None):
         new_notification.delete()
 
 def CreateNotification(recipient, actor, verb, target_post_id=None):
+    if recipient == actor:
+        return None
     return Notification.objects.create(
         recipient=recipient,
         actor=actor,
@@ -382,7 +384,7 @@ def Followers(request, username):
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
     
-    if user.private and request.user not in user.followers.all():
+    if request.user != user and user.private and request.user not in user.followers.all():
         return Response({"error": "This user has a private profile."}, status=403)
 
     followers_qs = (
@@ -407,7 +409,7 @@ def Following(request, username):
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
     
-    if user.private and request.user not in user.followers.all():
+    if request.user != user and user.private and request.user not in user.followers.all():
         return Response({"error": "This user has a private profile."}, status=403)
 
     following_qs = (
@@ -443,7 +445,7 @@ def ToggleFollow(request):
     if user in target.followers.all():
         target.followers.remove(user)
         DeleteRecentNotification(target, user, Notification.VERB_FOLLOW)
-        return Response({"success": True, "following": False})
+        return Response({"success": True, "following": False, "requested": False})
 
     try:
         if target.private:
@@ -452,12 +454,13 @@ def ToggleFollow(request):
                 fr.delete()
                 return Response({"success": True, "requested": False}, status=status.HTTP_200_OK)
             FollowRequest.objects.create(requester=user, target=target)
-            return Response({"success": True, "requested": True}, status=status.HTTP_201_CREATED)
+            CreateNotification(target, user, Notification.VERB_FOLLOW_REQUEST)
+            return Response({"success": True, "following": False, "requested": True}, status=status.HTTP_201_CREATED)
         else:
             target.followers.add(user)
             if target.notify_follow:
                 CreateNotification(target, user, Notification.VERB_FOLLOW)
-            return Response({"success": True, "following": True})
+            return Response({"success": True, "following": True, "requested": False}, status=status.HTTP_200_OK)
     except IntegrityError:
         return Response({"error": "Could not update follow status."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -498,7 +501,11 @@ def RespondFollowRequest(request, id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
-def AcceptAllFollowRequests(request):
+def RespondAllFollowRequests(request):
+    action = request.data.get('action')
+    if action not in ('accept', 'reject'):
+        return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+
     user = request.user
     if not user.private:
         return Response({"error": "You do not have a private profile."}, status=status.HTTP_403_FORBIDDEN)
@@ -506,13 +513,14 @@ def AcceptAllFollowRequests(request):
     follow_requests = FollowRequest.objects.filter(target=user)
 
     for fr in follow_requests:
-        user.followers.add(fr.requester)
-        CreateNotification(fr.requester, user, Notification.VERB_FR_ACCEPTED)
-        if user.notify_follow:
-            CreateNotification(user, fr.requester, Notification.VERB_FOLLOW)
+        if action == 'accept':
+            user.followers.add(fr.requester)
+            CreateNotification(fr.requester, user, Notification.VERB_FR_ACCEPTED)
+            if user.notify_follow:
+                CreateNotification(user, fr.requester, Notification.VERB_FOLLOW)
         fr.delete()
 
-    return Response({"success": True, "accepted": True}, status=status.HTTP_200_OK)
+    return Response({"success": True}, status=status.HTTP_200_OK)
 
 class NotificationListView(ListAPIView):
     serializer_class = NotificationSerializer
@@ -536,14 +544,17 @@ def GetLastNotifications(request):
 @permission_classes([IsAuthenticated])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def MarkNotificationsRead(request):
-    ids = request.data.get('ids')
-    qs = Notification.objects.filter(recipient=request.user, read=False)
-    if ids == 'all':
+    id = request.data.get("id")
+    if id == "all":
+        qs = Notification.objects.filter(recipient=request.user, read=False)
         qs.update(read=True)
-    elif isinstance(ids, list):
-        qs.filter(id__in=ids).update(read=True)
-    else:
-        return Response({"error": "invalid ids"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": True}, status=status.HTTP_200_OK)
+    try:
+        notification = Notification.objects.get(id=id, recipient=request.user)
+    except Notification.DoesNotExist:
+        return Response({"error": "Notification not found."}, status=status.HTTP_404_NOT_FOUND)
+    notification.read = True
+    notification.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
@@ -633,7 +644,7 @@ def GetPost(request, id):
     except Post.DoesNotExist:
         return Response({"error": "Post not found."}, status=404)
 
-    if post.user.private and request.user not in post.user.followers.all():
+    if request.user != post.user and post.user.private and request.user not in post.user.followers.all():
         return Response({"error": "This user has a private profile."}, status=403)
 
     serializer = PostSerializer(post, context={'request': request})
@@ -656,7 +667,7 @@ class UserPostsView(ListAPIView):
         except MyUser.DoesNotExist:
             raise NotFound(detail="User not found.")
         
-        if user.private and self.request.user not in user.followers.all():
+        if self.request.user != user and user.private and self.request.user not in user.followers.all():
             raise PermissionDenied(detail="This user has a private profile.")
         
         return user.posts.all().order_by('-id')
@@ -790,6 +801,7 @@ def CreateComment(request):
     serializer.save(user=request.user, post=post)
 
     CheckForMentions(data['text'], request.user, is_post=False, post_id=post_id)
+    CreateNotification(post.user, request.user, Notification.VERB_COMMENT, target_post_id=post_id)
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 

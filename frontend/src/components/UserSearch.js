@@ -4,7 +4,7 @@ import { Box, Input, VStack, HStack, Avatar, Text, useOutsideClick } from "@chak
 
 import { searchUsersApi } from "../api/endpoints.js";
 import { useLang } from "../contexts/useLang.js";
-import { COLOR_1, COLOR_2, COLOR_3 } from "../constants/constants.js";
+import { COLOR_1, COLOR_2, COLOR_3, COLOR_4 } from "../constants/constants.js";
 
 const UserSearch = ({ onClose }) => {
     const { t } = useLang();
@@ -29,18 +29,17 @@ const UserSearch = ({ onClose }) => {
     };
 
     return (
-        <Box ref={ref} bg={COLOR_3} w="260px" position="relative">
+        <Box ref={ref} bg={COLOR_3} w="260px" borderBottomRadius="md" position="relative">
             <Input
                 placeholder={t("search_users_placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 border="none"
-                borderRadius="0"
                 color={COLOR_1}
                 bg={COLOR_3}
                 _focus={{ outline: "none", boxShadow: "none", borderColor: "transparent" }}
                 _focusVisible={{ outline: "none", boxShadow: "none", borderColor: "transparent" }}
-                _placeholder={{ color: COLOR_1 }}
+                _placeholder={{ color: COLOR_2 }}
             />
 
             <Box borderRadius={10}>
@@ -50,7 +49,7 @@ const UserSearch = ({ onClose }) => {
                             key={user.username}
                             px={2}
                             py={1}
-                            _hover={{ bg: COLOR_2 }}
+                            _hover={{ bg: COLOR_4 }}
                             cursor="pointer"
                             onClick={() => go(user.username)}
                         >
@@ -61,7 +60,7 @@ const UserSearch = ({ onClose }) => {
                                         {user.first_name}
                                     </Text>
                                 )}
-                                <Text fontSize="sm" color={COLOR_1}>
+                                <Text fontSize="sm" color={COLOR_1} maxW="180px" isTruncated>
                                     @{user.username}
                                 </Text>
                             </VStack>
