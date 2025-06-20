@@ -10,6 +10,8 @@ const messageFor = (n, t) => {
     switch (n.verb) {
         case "follow":
             return t("notification_follow");
+        case "follow_request":
+            return t("notification_follow_request");
         case "like":
             return t("notification_like");
         case "comment":
@@ -40,7 +42,7 @@ const Notifications = () => {
             setLoading(true);
             try {
                 const data = await getNotificationsApi(cursor);
-                setNotifs((prev) => [...prev, ...data.results]);
+                setNotifs((prev) => (cursor ? [...prev, ...data.results] : data.results));
                 setNextCursor(data.next ? data.next : false);
             } catch {
                 toast({
@@ -77,11 +79,26 @@ const Notifications = () => {
     );
 
     const handleMarkRead = async () => {
-        await markNotificationsReadApi("all");
+        try {
+            await markNotificationsReadApi("all");
+            setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+            window.dispatchEvent(new Event("refresh-notifs"));
+        } catch {
+            console.error("Failed to mark notifications as read");
+            return;
+        }
     };
 
-    const go = (n) => {
-        if (n.verb === "follow" || n.verb === "fr_accepted") {
+    const go = async (n) => {
+        try {
+            await markNotificationsReadApi(n.id);
+        } catch (err) {
+            console.error("Error marking notifications as read:", err);
+            return;
+        }
+        window.dispatchEvent(new Event("refresh-notifs"));
+        if (n.verb === "follow_request") return;
+        else if (n.verb === "follow" || n.verb === "fr_accepted") {
             navigate(`/${n.actor.username}`);
         } else {
             navigate(`/post/${n.target_post_id}`);
@@ -89,8 +106,8 @@ const Notifications = () => {
     };
 
     return (
-        <Box maxW="container.sm" mx="auto" py={6} px={2}>
-            <Flex justify="space-between" align="center" mb={4}>
+        <Box maxW="container.sm" mx="auto" py={6} px={4}>
+            <Flex justify="space-between" mb={4}>
                 <Text fontSize="xl" fontWeight="bold" color={COLOR_4}>
                     {t("notification_title")}
                 </Text>
@@ -104,8 +121,7 @@ const Notifications = () => {
                     <HStack
                         key={n.id}
                         ref={i === notifs.length - 1 ? lastRef : null}
-                        px={3}
-                        py={2}
+                        py={1}
                         borderRadius="md"
                         _hover={{ bg: COLOR_3 }}
                         cursor="pointer"

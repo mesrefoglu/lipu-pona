@@ -25,6 +25,7 @@ import LegalIndex from "./routes/legal/LegalIndex.js";
 import TOS from "./routes/legal/TOS.js";
 import PrivacyPolicy from "./routes/legal/PrivacyPolicy.js";
 import CookiesNotice from "./routes/legal/Cookies.js";
+import Notifications from "./routes/Notifications.js";
 
 function App() {
     return (
@@ -59,6 +60,26 @@ function App() {
                                     <Layout>
                                         <PrivateRoute>
                                             <SinglePost />
+                                        </PrivateRoute>
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/account/notifications"
+                                element={
+                                    <Layout>
+                                        <PrivateRoute>
+                                            <Notifications />
+                                        </PrivateRoute>
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/account/edit"
+                                element={
+                                    <Layout>
+                                        <PrivateRoute>
+                                            <EditUser />
                                         </PrivateRoute>
                                     </Layout>
                                 }
@@ -120,16 +141,6 @@ function App() {
                                         <GuestRoute>
                                             <ActivateAccount />
                                         </GuestRoute>
-                                    </Layout>
-                                }
-                            />
-                            <Route
-                                path="/account/edit"
-                                element={
-                                    <Layout>
-                                        <PrivateRoute>
-                                            <EditUser />
-                                        </PrivateRoute>
                                     </Layout>
                                 }
                             />

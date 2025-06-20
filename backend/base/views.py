@@ -545,7 +545,7 @@ def GetLastNotifications(request):
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def MarkNotificationsRead(request):
     id = request.data.get("id")
-    if not id:
+    if id == "all":
         qs = Notification.objects.filter(recipient=request.user, read=False)
         qs.update(read=True)
         return Response({"success": True}, status=status.HTTP_200_OK)

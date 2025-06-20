@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Flex, HStack, Text, useBreakpointValue } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +33,7 @@ const Navbar = () => {
     const notifDotRight = useBreakpointValue({ base: "52px", md: "80px" });
     const notifDotSize = useBreakpointValue({ base: "2xs", md: "xs" });
 
-    const fetchNotifications = async () => {
+    const fetchLastNotifications = useCallback(async () => {
         try {
             const data = await getLastNotificationsApi();
             setNotifications(data.notifications);
@@ -41,13 +41,21 @@ const Navbar = () => {
         } catch (err) {
             console.error("Error fetching notifications: ", err);
         }
+    }, []);
+
+    const onNotifClick = () => {
+        fetchLastNotifications();
+        setNotifOpen((v) => !v);
     };
 
     useEffect(() => {
         if (user) {
-            fetchNotifications();
+            fetchLastNotifications();
         }
-    }, [user]);
+        const handler = () => fetchLastNotifications();
+        window.addEventListener("refresh-notifs", handler);
+        return () => window.removeEventListener("refresh-notifs", handler);
+    }, [user, fetchLastNotifications]);
 
     return (
         <Flex
@@ -64,8 +72,9 @@ const Navbar = () => {
                 fontSize={logoFontSize}
                 fontWeight="bold"
                 color={COLOR_1}
-                onClick={() => navigate("/")}
+                whiteSpace="nowrap"
                 cursor="pointer"
+                onClick={() => navigate("/")}
             >
                 lipu pona
             </Text>
@@ -110,20 +119,20 @@ const Navbar = () => {
                             <NotifPanel
                                 notifications={notifications}
                                 onClose={() => setNotifOpen(false)}
-                                onMarkRead={() => fetchNotifications()}
+                                onMarkRead={() => fetchLastNotifications()}
                             />
                         </MotionBox>
                     )}
                 </AnimatePresence>
                 <HStack spacing={labelMargin} cursor="pointer" onClick={toggle}>
-                    <Text color={COLOR_1} fontSize={labelFont} fontWeight="bold">
+                    <Text color={COLOR_1} fontSize={labelFont} fontWeight="bold" align="right" lineHeight="15px">
                         {lang === "tp" ? t("lang_tp") : t("lang_en")}
                     </Text>
                     <FiGlobe size={iconSize} />
                 </HStack>
                 <FiHelpCircle size={iconSize} onClick={() => navigate("/site/info")} cursor="pointer" />
                 {user && <FiSearch size={iconSize} onClick={() => setSearchOpen((v) => !v)} cursor="pointer" />}
-                {user && <FiBell size={iconSize} onClick={() => setNotifOpen((v) => !v)} cursor="pointer" />}
+                {user && <FiBell size={iconSize} onClick={onNotifClick} cursor="pointer" />}
                 {user && unreadCount > 0 && (
                     <Text
                         position="absolute"
