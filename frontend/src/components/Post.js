@@ -187,7 +187,7 @@ const Post = ({
                 <Flex align="center" mb={3} w="full">
                     <Flex onClick={() => navigate(`/${username}`)} cursor="pointer" w="auto" align="center">
                         <Avatar size="md" src={profile_picture || undefined} />
-                        <VStack align="flex-start" ml={3} flex="1" minW="0">
+                        <VStack align="flex-start" ml={3} p={0} my={0} spacing={0.9} flex="1" minW="0">
                             {name && (
                                 <Text fontWeight="bold" color={COLOR_4} w="full" isTruncated>
                                     {name}

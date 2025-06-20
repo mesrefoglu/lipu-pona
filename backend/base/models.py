@@ -77,15 +77,17 @@ class FollowRequest(models.Model):
         return f"FollowRequest(from={self.requester.username} to={self.target.username})"
 
 class Notification(models.Model):
-    VERB_FOLLOW           = 'follow'
-    VERB_LIKE             = 'like'
-    VERB_COMMENT          = 'comment'
-    VERB_MENTION_POST     = 'mention_post'
-    VERB_MENTION_COMMENT  = 'mention_comment'
-    VERB_FR_ACCEPTED      = 'fr_accepted'
+    VERB_FOLLOW          = 'follow'
+    VERB_FOLLOW_REQUEST  = 'follow_request'
+    VERB_LIKE            = 'like'
+    VERB_COMMENT         = 'comment'
+    VERB_MENTION_POST    = 'mention_post'
+    VERB_MENTION_COMMENT = 'mention_comment'
+    VERB_FR_ACCEPTED     = 'fr_accepted'
 
     VERB_CHOICES = [
         (VERB_FOLLOW,          'Follow'),
+        (VERB_FOLLOW_REQUEST,  'Follow request'),
         (VERB_LIKE,            'Like'),
         (VERB_COMMENT,         'Comment'),
         (VERB_MENTION_POST,    'Mention in post'),

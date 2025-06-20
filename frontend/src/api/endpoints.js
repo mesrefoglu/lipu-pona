@@ -103,18 +103,14 @@ export const followRequestApi = async (username) => {
     return response.data;
 };
 
-export const respondFollowRequestApi = async (id, action) => {
+export const respondFollowRequestApi = async (action, id = "all") => {
     const response = await api.post(`/follow-requests/respond/${id}/`, { action: action });
     return response.data;
 };
 
-export const acceptAllFollowRequestsApi = async () => {
-    const response = await api.post("/follow-requests/respond/all/");
-    return response.data;
-};
-
-export const getNotificationsApi = async () => {
-    const response = await api.get("/notifications/");
+export const getNotificationsApi = async (cursor = null) => {
+    const url = cursor ? cursor : "/notifications/";
+    const response = await api.get(url);
     return response.data;
 };
 
@@ -123,8 +119,8 @@ export const getLastNotificationsApi = async () => {
     return response.data;
 };
 
-export const markNotificationsReadApi = async () => {
-    const response = await api.post("/notifications/mark-read/");
+export const markNotificationsReadApi = async (id = "all") => {
+    const response = await api.post("/notifications/mark-read/", { id: id });
     return response.data;
 };
 

@@ -98,7 +98,7 @@ const SinglePost = () => {
     }
 
     return (
-        <Box maxW="container.sm" mx="auto" py={4}>
+        <Box maxW="container.sm" mx="auto" p={4}>
             <VStack spacing={2} align="stretch">
                 <Post {...post} />
 
