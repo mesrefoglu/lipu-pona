@@ -264,7 +264,7 @@ export const translations = {
         info: "󱥡󱥍󱤪󱥔",
         info_body: "󱤴󱥉󱤉󱤪󱥁󱥧󱥷󱥁: 󱤑󱥍󱥬󱥔󱤧󱤘󱤓󱤉󱤪󱤟󱥆󱦜󱤴󱤨󱤉󱤪󱤧󱥔󱤉󱤪󱦜󱥁󱤡,󱤑󱤧󱤘󱥌󱤉󱥷󱥆󱤉󱥠󱥆󱤧󱤘󱤖󱥒󱤬󱤰󱥔󱦜",
         info_open_source: "󱤑󱤄󱤧󱤘󱤮󱤉󱥬󱤎󱤏󱥍󱤪󱥁: ",
-        info_toki_pona: "󱥄󱤖󱥡󱤉󱤌󱥸󱥍󱥬󱥔:",
+        info_toki_pona: "󱥄󱤖󱥡󱤉󱤌󱥸󱥍󱥬󱥔: ",
         info_contact: "󱥄󱥬󱥩󱤴:\n󱥂󱥍󱤎Siko: qedized\n󱤪󱥬󱤎: contact@qedized󱦜com",
         email_cant_be_changed: "󱥞󱤘󱤂󱤆󱤉󱥁󱦜",
         email_placeholder: "󱥂@󱤟.󱤌",

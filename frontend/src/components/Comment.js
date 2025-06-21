@@ -14,6 +14,7 @@ import {
     EditablePreview,
     EditableTextarea,
     VStack,
+    Link,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaEdit, FaTrash } from "react-icons/fa";
@@ -42,6 +43,45 @@ const ActionButton = ({ icon, onClick, active }) => (
 
 const MAX_CHARS = 250;
 
+const TOKEN_REGEX = /(@[A-Za-z0-9_]+)|(https?:\/\/[^\s]+)/g;
+
+const formatNodes = (raw, navigate) =>
+    raw.split(TOKEN_REGEX).map((part, i) => {
+        if (!part) return null;
+
+        if (part[0] === "@") {
+            const handle = part.slice(1);
+            return (
+                <Link
+                    key={i}
+                    color={COLOR_3}
+                    cursor="pointer"
+                    _hover={{ color: COLOR_4 }}
+                    onClick={() => navigate(`/${handle}`)}
+                >
+                    {part}
+                </Link>
+            );
+        }
+
+        if (part.startsWith("http")) {
+            return (
+                <Link
+                    key={i}
+                    href={part}
+                    isExternal
+                    color={COLOR_3}
+                    cursor="pointer"
+                    onFocus={(e) => e.stopPropagation()}
+                >
+                    {part}
+                </Link>
+            );
+        }
+
+        return part;
+    });
+
 const Comment = ({
     id,
     is_mine,
@@ -50,7 +90,6 @@ const Comment = ({
     profile_picture,
     text,
     created_at,
-    formatted_date,
     like_count,
     is_liked,
     is_edited,
@@ -257,7 +296,13 @@ const Comment = ({
                                     </Box>
                                 </>
                             ) : (
-                                <EditablePreview as={Text} whiteSpace="pre-wrap" color={COLOR_4} w="full" />
+                                <EditablePreview
+                                    as={(props) => (
+                                        <Box {...props} mb={3} whiteSpace="pre-wrap" color={COLOR_4} w="full">
+                                            {formatNodes(displayText, navigate)}
+                                        </Box>
+                                    )}
+                                />
                             )}
                         </>
                     )}
