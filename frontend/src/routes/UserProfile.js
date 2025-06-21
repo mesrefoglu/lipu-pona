@@ -193,8 +193,8 @@ const UserProfile = () => {
                     <Avatar size="2xl" src={profile.profile_picture || undefined} />
                 </Box>
 
-                <VStack align="flex-start" flex={1} spacing={4}>
-                    <Text fontWeight="bold" color={textColor} mb={{ base: 4, sm: 0 }}>
+                <VStack align="flex-start" flex={1} spacing={3}>
+                    <Text fontWeight="bold" color={textColor} mb={0}>
                         @{profile.username}
                     </Text>
 
@@ -227,7 +227,7 @@ const UserProfile = () => {
                     ) : (
                         <Button
                             bg={isFollowing ? "transparent" : COLOR_3}
-                            w={{ base: "full", sm: "auto" }}
+                            w="auto"
                             border="2px"
                             borderColor={isFollowing ? COLOR_3 : "transparent"}
                             color={textColor}
@@ -262,11 +262,11 @@ const UserProfile = () => {
                         </HStack>
                     </HStack>
 
-                    <VStack align="flex-start" spacing={1}>
-                        <Text fontWeight="medium" color={textColor} maxW="460px">
+                    <VStack align="flex-start" spacing={1} w="full">
+                        <Text fontWeight="medium" color={textColor} wordBreak="break-word">
                             {profile.first_name}
                         </Text>
-                        <Text color={textColor} whiteSpace="pre-wrap" maxW="460px">
+                        <Text color={textColor} whiteSpace="pre-wrap" wordBreak="break-word">
                             {profile.bio}
                         </Text>
                     </VStack>
