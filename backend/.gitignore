@@ -7,3 +7,4 @@ credentials.txt
 /staticfiles
 *.sqlite3
 __pycache__
+/tools
