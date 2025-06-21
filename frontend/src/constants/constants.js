@@ -2,7 +2,7 @@ const isLocal = process.env.NODE_ENV === "development";
 
 export const BASE_URL = isLocal ? "http://localhost:3000" : "https://lipupona.net";
 
-export const API_URL = isLocal ? "http://127.0.0.1:8000/api" : "https://lipupona.fly.dev/api";
+export const API_URL = isLocal ? "http://127.0.0.1:8000/api" : "https://api.lipupona.net/api";
 
 export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 

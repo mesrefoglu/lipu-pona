@@ -109,7 +109,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             value=access,
             httponly=True,
             secure=True,
-            samesite="None",
+            samesite="Lax",
+            domain=".lipupona.net",
             path="/",
         )
         resp.set_cookie(
@@ -117,7 +118,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             value=refresh,
             httponly=True,
             secure=True,
-            samesite="None",
+            samesite="Lax",
+            domain=".lipupona.net",
             path="/",
         )
         return resp
@@ -145,13 +147,19 @@ class CustomTokenRefreshView(TokenRefreshView):
             value=access,
             httponly=True,
             secure=True,
-            samesite="None",
+            samesite="Lax",
+            domain=".lipupona.net",
             path="/",
         )
         if refresh:                                         
             resp.set_cookie(
-                "refresh_token", refresh,
-                httponly=True, secure=True, samesite="None", path="/",
+                key="refresh_token",
+                value=refresh,
+                httponly=True,
+                secure=True,
+                samesite="Lax",
+                domain=".lipupona.net",
+                path="/",
             )
         return resp
 
@@ -182,8 +190,9 @@ def PasswordResetRequest(request):
         recipient_list=[email],
         fail_silently=True,
     )
-    if settings.DEBUG:
-        print("reset url:", reset_url)
+    print("reset url:", reset_url)
+    logger.info("Password reset email sent to %s", email)
+    logger.info("Reset URL: %s", reset_url)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["POST"])
@@ -274,8 +283,9 @@ def Register(request):
         recipient_list=[vd["email"]],
         fail_silently=True,
     )
-    if settings.DEBUG:
-        print("activation url:", activation_url)
+    print("activation url:", activation_url)
+    logger.info("Activation email sent to %s", vd["email"])
+    logger.info("Reset URL: %s", activation_url)
     return Response({"success": True}, status=status.HTTP_201_CREATED)
 
 @api_view(["POST"])
@@ -285,24 +295,24 @@ def ActivateAccount(request, activation_key: str):
         key_uuid = uuid.UUID(activation_key, version=4)
     except ValueError:
         return Response({"error": "Invalid activation key."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     try:
         pending = PendingRegistration.objects.get(activation_key=key_uuid)
     except PendingRegistration.DoesNotExist:
         return Response({"error": "Activation key not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+
     age = timezone.now() - pending.created_at
     if age > timezone.timedelta(days=2):
         pending.delete()
         return Response({"error": "Activation key expired."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     if MyUser.objects.filter(username=pending.username, is_active=True).exists():
         pending.delete()
         return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
     if MyUser.objects.filter(email=pending.email, is_active=True).exists():
         pending.delete()
         return Response({"error": "Email already taken."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     user = MyUser.objects.create(
         username=pending.username,
         first_name=pending.first_name,
@@ -328,7 +338,8 @@ def Logout(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="None",
+        samesite="Lax",
+        domain=".lipupona.net",
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -338,7 +349,8 @@ def Logout(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="None",
+        samesite="Lax",
+        domain=".lipupona.net",
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -383,7 +395,7 @@ def Followers(request, username):
         user = MyUser.objects.get(username=username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
-    
+
     if request.user != user and user.private and request.user not in user.followers.all():
         return Response({"error": "This user has a private profile."}, status=403)
 
@@ -570,14 +582,14 @@ def EditUser(request):
         user = MyUser.objects.get(username=request.user.username)
     except MyUser.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+
     data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
 
     serializer = MyUserSerializer(user, data, partial=True)
 
     if not serializer.is_valid():
         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     if new_password:
         if not current_password or not user.check_password(current_password):
             return Response(
@@ -586,7 +598,7 @@ def EditUser(request):
             )
         user.set_password(new_password)
         user.save()
-    
+
     serializer.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
 
@@ -602,7 +614,8 @@ def DeleteUser(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="None",
+        samesite="Lax",
+        domain=".lipupona.net",
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -612,7 +625,8 @@ def DeleteUser(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="None",
+        samesite="Lax",
+        domain=".lipupona.net",
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
