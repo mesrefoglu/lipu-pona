@@ -8,7 +8,7 @@ export const LangProvider = ({ children }) => {
 
     const toggle = () => {
         setLang((l) => {
-            const next = l === "tp" ? "en" : "tp";
+            const next = l === "tp" ? "sp" : l === "sp" ? "en" : "tp";
             localStorage.setItem("lang", next);
             return next;
         });
@@ -17,7 +17,7 @@ export const LangProvider = ({ children }) => {
     const t = (key) => translations[lang][key] || key;
 
     useEffect(() => {
-        document.documentElement.lang = lang === "tp" ? "tok" : "en";
+        document.documentElement.lang = lang === "tp" || lang === "sp" ? "tok" : "en";
     }, [lang]);
 
     return <LangContext.Provider value={{ lang, t, toggle }}>{children}</LangContext.Provider>;

@@ -126,7 +126,7 @@ const Navbar = () => {
                 </AnimatePresence>
                 <HStack spacing={labelMargin} cursor="pointer" onClick={toggle}>
                     <Text color={COLOR_1} fontSize={labelFont} fontWeight="bold" align="right" lineHeight="15px">
-                        {lang === "tp" ? t("lang_tp") : t("lang_en")}
+                        {lang === "tp" ? t("lang_tp") : lang === "sp" ? t("lang_sp") : t("lang_en")}
                     </Text>
                     <FiGlobe size={iconSize} />
                 </HStack>

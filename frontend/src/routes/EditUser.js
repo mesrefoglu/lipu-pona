@@ -196,7 +196,7 @@ const EditUser = () => {
         <>
             <Flex minH="85vh" align="center" justify="center" px={4}>
                 <Box w={{ base: "full", sm: "md" }} bg={COLOR_4} p={8} rounded="2xl" shadow="2xl">
-                    <VStack as="form" spacing={6} w="full" onSubmit={handleSubmit} align="flex-start">
+                    <VStack as="form" spacing={3} w="full" onSubmit={handleSubmit} align="flex-start">
                         <Heading size="lg" textAlign="center" mx="auto" color={COLOR_1}>
                             {t("edit_profile_heading")}
                         </Heading>

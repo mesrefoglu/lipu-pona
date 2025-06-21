@@ -10,7 +10,7 @@ const Info = () => {
         <Box maxW="container.md" mx="auto" py={10} px={4}>
             <VStack align="stretch" spacing={6}>
                 <Heading size="lg" color={COLOR_4}>
-                    lipu pona — {t("info")}
+                    {t("info")}
                 </Heading>
 
                 <Text color={COLOR_4} whiteSpace="pre-wrap">
