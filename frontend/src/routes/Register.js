@@ -22,7 +22,7 @@ import { registerApi, checkUsernameApi, checkEmailApi } from "../api/endpoints.j
 import { useLang } from "../contexts/useLang.js";
 
 const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
-const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW ]{0,50}$/;
+const nameRegex = /^[aeijklmnopstuwAEIJKLMNOPSTUW \u{F1900}-\u{F19FF}]{0,50}$/u;
 const emailRegex = /^(?=.{5,200}$)[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const checkForLength = (str, min, max) => str.length >= min && str.length <= max;
