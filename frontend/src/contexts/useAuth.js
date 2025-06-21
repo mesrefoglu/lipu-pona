@@ -24,10 +24,10 @@ export const AuthProvider = ({ children }) => {
     const authLogin = async (username, password) => {
         const resp = await loginApi(username, password);
         if (resp.success) {
-            const me = await getAuthApi();
-            setUser(me);
+            const user = await getAuthApi();
+            setUser(user);
             navigate("/");
-            return me;
+            return user;
         } else {
             setUser(null);
             throw new Error("Login failed");

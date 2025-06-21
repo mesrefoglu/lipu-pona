@@ -121,14 +121,29 @@ const Notifications = () => {
                     <HStack
                         key={n.id}
                         ref={i === notifs.length - 1 ? lastRef : null}
+                        position="relative"
+                        px={2}
                         py={1}
+                        ml={!n.read ? 8 : 0}
                         borderRadius="md"
                         _hover={{ bg: COLOR_3 }}
                         cursor="pointer"
                         onClick={() => go(n)}
                     >
+                        {!n.read && (
+                            <Box
+                                position="absolute"
+                                left="-25px"
+                                top="50%"
+                                transform="translateY(-50%)"
+                                w={2}
+                                h={2}
+                                bg={COLOR_3}
+                                borderRadius="full"
+                            />
+                        )}
                         <Avatar size="sm" src={n.actor.profile_picture || undefined} />
-                        <VStack align="flex-start" spacing={0} flex={1}>
+                        <VStack align="left" spacing={0} flex={1}>
                             <Text fontWeight="medium" fontSize="sm" color={COLOR_4} isTruncated maxW="250px">
                                 {n.actor.first_name || n.actor.username}
                             </Text>
@@ -137,7 +152,17 @@ const Notifications = () => {
                             </Text>
                         </VStack>
                         <Text fontSize="xs" color={COLOR_4} whiteSpace="nowrap">
-                            {new Date(n.created_at).toLocaleString()}
+                            {new Date(n.created_at)
+                                .toLocaleString("en-GB", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                    hourCycle: "h23",
+                                })
+                                .replace(",", "")}
                         </Text>
                     </HStack>
                 ))}

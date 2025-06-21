@@ -52,6 +52,7 @@ const Post = ({
     profile_picture,
     image,
     text,
+    created_at,
     formatted_date,
     like_count,
     is_liked,
@@ -281,7 +282,17 @@ const Post = ({
 
                 <Divider mb={2} />
                 <Text fontSize="xs" color={COLOR_4} mb={2}>
-                    {formatted_date}
+                    {new Date(created_at)
+                        .toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                            hourCycle: "h23",
+                        })
+                        .replace(",", "")}
                 </Text>
                 <Divider mb={2} />
 

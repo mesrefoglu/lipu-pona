@@ -57,6 +57,8 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+samesite = "None" if settings.DEBUG else "Lax"
+
 def DeleteRecentNotification(recipient, actor, verb, target_post_id=None):
     new_notification = Notification.objects.filter(
         recipient=recipient,
@@ -109,8 +111,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             value=access,
             httponly=True,
             secure=True,
-            samesite="Lax",
-            domain=".lipupona.net",
+            samesite=samesite,
             path="/",
         )
         resp.set_cookie(
@@ -118,8 +119,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             value=refresh,
             httponly=True,
             secure=True,
-            samesite="Lax",
-            domain=".lipupona.net",
+            samesite=samesite,
             path="/",
         )
         return resp
@@ -147,8 +147,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             value=access,
             httponly=True,
             secure=True,
-            samesite="Lax",
-            domain=".lipupona.net",
+            samesite=samesite,
             path="/",
         )
         if refresh:                                         
@@ -157,8 +156,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                 value=refresh,
                 httponly=True,
                 secure=True,
-                samesite="Lax",
-                domain=".lipupona.net",
+                samesite=samesite,
                 path="/",
             )
         return resp
@@ -167,6 +165,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 @permission_classes([IsAuthenticated])
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def Authenticated(request):
+    print("request:", request)
     serializer = MyUserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
 
@@ -338,8 +337,7 @@ def Logout(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="Lax",
-        domain=".lipupona.net",
+        samesite=samesite,
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -349,8 +347,7 @@ def Logout(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="Lax",
-        domain=".lipupona.net",
+        samesite=samesite,
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -614,8 +611,7 @@ def DeleteUser(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="Lax",
-        domain=".lipupona.net",
+        samesite=samesite,
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",
@@ -625,8 +621,7 @@ def DeleteUser(request):
         value="",
         httponly=True,
         secure=True,
-        samesite="Lax",
-        domain=".lipupona.net",
+        samesite=samesite,
         path="/",
         max_age=0,
         expires="Thu, 01 Jan 1970 00:00:00 GMT",

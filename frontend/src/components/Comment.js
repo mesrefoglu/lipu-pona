@@ -49,6 +49,7 @@ const Comment = ({
     name,
     profile_picture,
     text,
+    created_at,
     formatted_date,
     like_count,
     is_liked,
@@ -185,7 +186,17 @@ const Comment = ({
                             </HStack>
 
                             <Text fontSize="xs" color={COLOR_4}>
-                                {formatted_date}
+                                {new Date(created_at)
+                                    .toLocaleString("en-GB", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: false,
+                                        hourCycle: "h23",
+                                    })
+                                    .replace(",", "")}
                                 {edited && !editing && ` 🞄 (${t("comment_edited")})`}
                             </Text>
                         </VStack>
