@@ -912,29 +912,22 @@ class DiscoverView(ListAPIView):
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
-        if connection.vendor == "postgresql":
-            age_minutes = ExpressionWrapper(
-                (Extract(Now(), "epoch") - Extract(F("created_at"), "epoch")) / 60.0,
-                output_field=FloatField(),
-            )
+        if connection.vendor == 'postgresql':
+            created_epoch = Extract(F('created_at'), 'epoch')
         else:
-            table = Post._meta.db_table
-            age_minutes = RawSQL(
-                f"(julianday('now') - julianday({table}.\"created_at\")) * 1440.0",
-                [],
-                output_field=FloatField(),
-            )
+            created_epoch = RawSQL('julianday(created_at) * 86400', [])
 
         score_expr = ExpressionWrapper(
-            100 * F("likes_count") + 100 * F("commenters_count") - age_minutes,
-            output_field=FloatField(),
+            F('likes_count') +
+            F('commenters_count') +
+            created_epoch / 10000.0, # higher constant means less weight on time
+            output_field=FloatField()
         )
 
         annotated = Post.objects.annotate(
-                likes_count=Count("likes", distinct=True),
-                commenters_count=Count("comments__user", distinct=True),
-                age_minutes=age_minutes,
-                score=score_expr,
-            )
+            likes_count=Count('likes', distinct=True),
+            commenters_count=Count('comments__user', distinct=True),
+            score=score_expr,
+        )
 
         return annotated
