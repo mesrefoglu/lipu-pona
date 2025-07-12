@@ -937,6 +937,4 @@ class DiscoverView(ListAPIView):
                 score=score_expr,
             )
 
-        return (
-            annotated.order_by("-score", "-id")
-        )
+        return annotated
