@@ -174,7 +174,7 @@ const CreatePost = ({ onPostCreated }) => {
                                     <Box position="relative" w="full">
                                         <Textarea
                                             value={altText}
-                                            placeholder={t("alt_text_placeholder")}
+                                            placeholder={t("alt_text_placeholder") + " (alt text)"}
                                             onChange={handleAltTextChange}
                                             ref={altInputRef}
                                             rows={1}
