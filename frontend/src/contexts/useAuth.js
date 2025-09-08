@@ -47,7 +47,14 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         checkAuth();
-    }, []);
+        const handleAuthLogout = () => {
+            setUser(null);
+            navigate("/account/login");
+        };
+
+        window.addEventListener("auth:logout", handleAuthLogout);
+        return () => window.removeEventListener("auth:logout", handleAuthLogout);
+    }, [navigate]);
 
     return (
         <AuthContext.Provider value={{ user, setUser, loading, authLogin, logout }}>{children}</AuthContext.Provider>

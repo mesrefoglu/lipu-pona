@@ -113,6 +113,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             secure=True,
             samesite=samesite,
             path="/",
+            max_age=43200,
         )
         resp.set_cookie(
             key="refresh_token",
@@ -121,6 +122,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             secure=True,
             samesite=samesite,
             path="/",
+            max_age=2592000,
         )
         return resp
         
@@ -149,6 +151,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             secure=True,
             samesite=samesite,
             path="/",
+            max_age=43200,  # 12 hours in seconds
         )
         if refresh:                                         
             resp.set_cookie(
@@ -158,6 +161,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                 secure=True,
                 samesite=samesite,
                 path="/",
+                max_age=2592000,  # 30 days in seconds
             )
         return resp
 
