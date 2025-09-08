@@ -40,6 +40,7 @@ from .views import (
     CommentLikers,
     FeedView,
     DiscoverView,
+    LikedPostsView,
 )
 
 urlpatterns = [
@@ -81,4 +82,5 @@ urlpatterns = [
     path("comment-likers/<int:id>/", CommentLikers, name="comment_likers"),
     path('feed/', FeedView.as_view(), name='feed'),
     path('discover/', DiscoverView.as_view(), name='discover'),
+    path('liked-posts/', LikedPostsView.as_view(), name='liked_posts'),
 ]

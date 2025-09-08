@@ -242,3 +242,9 @@ export const discoverApi = async (cursor = null) => {
     const response = await api.get(url);
     return response.data;
 };
+
+export const getLikedPostsApi = async (cursor = null) => {
+    const url = cursor ? cursor : `/liked-posts/`;
+    const response = await api.get(url);
+    return response.data;
+};

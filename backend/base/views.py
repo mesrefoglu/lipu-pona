@@ -931,3 +931,12 @@ class DiscoverView(ListAPIView):
         )
 
         return annotated
+
+class LikedPostsView(ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PostCursorPagination
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get_queryset(self):
+        return self.request.user.liked_posts.all().order_by('-id')

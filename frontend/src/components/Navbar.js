@@ -3,7 +3,7 @@ import { Flex, HStack, Text, useBreakpointValue } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
-import { FiBell, FiGlobe, FiHelpCircle, FiSearch } from "react-icons/fi";
+import { FiBell, FiGlobe, FiHelpCircle, FiSearch, FiHeart } from "react-icons/fi";
 
 import { COLOR_1, COLOR_3 } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
@@ -132,6 +132,7 @@ const Navbar = () => {
                 </HStack>
                 <FiHelpCircle size={iconSize} onClick={() => navigate("/site/info")} cursor="pointer" />
                 {user && <FiSearch size={iconSize} onClick={() => setSearchOpen((v) => !v)} cursor="pointer" />}
+                {user && <FiHeart size={iconSize} onClick={() => navigate("/account/liked")} cursor="pointer" />}
                 {user && <FiBell size={iconSize} onClick={onNotifClick} cursor="pointer" />}
                 {user && unreadCount > 0 && (
                     <Text

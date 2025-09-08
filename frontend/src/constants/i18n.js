@@ -139,6 +139,8 @@ export const translations = {
         notification_fr_accepted: "li open e sona ona tawa sina.",
         notification_mark_read: "o pini e ale",
         notification_see_all: "o lukin e ale",
+        liked_posts_title: "lipu pi olin sina",
+        no_liked_posts: "sina olin ala e lipu.",
     },
 
     sp: {
@@ -280,6 +282,8 @@ export const translations = {
         notification_fr_accepted: "󱤧󱥇󱤉󱥡󱥆󱥩󱥞󱦜",
         notification_mark_read: "󱥄󱥐󱤉󱤄",
         notification_see_all: "󱥄󱤮󱤉󱤄",
+        liked_posts_title: "󱤪󱥔󱥅󱥞",
+        no_liked_posts: "󱥞󱥅󱤄󱤉󱤪󱦜",
     },
 
     en: {
@@ -422,5 +426,7 @@ export const translations = {
         notification_fr_accepted: "accepted your follow request.",
         notification_mark_read: "Mark all as read",
         notification_see_all: "See all",
+        liked_posts_title: "Liked Posts",
+        no_liked_posts: "You haven't liked any posts yet.",
     },
 };
