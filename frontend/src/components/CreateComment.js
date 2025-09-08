@@ -57,6 +57,34 @@ const CreateComment = ({ onCommentCreated }) => {
         };
     }, []);
 
+    useEffect(() => {
+        const onReply = (e) => {
+            const uname = e?.detail?.username;
+            if (!uname) return;
+            const mention = `@${uname} `;
+
+            setText((prev) => {
+                const alreadyHas = new RegExp(`(^|\\s)@${uname}(\\s|$)`).test(prev);
+                if (alreadyHas) return prev;
+                const next = (prev ? `${prev.replace(/\s*$/, " ")}${mention}` : mention).slice(0, MAX_CHARS);
+                return next;
+            });
+
+            requestAnimationFrame(() => {
+                const el = textInputRef.current;
+                if (el) {
+                    el.focus();
+                    const len = el.value.length;
+                    el.setSelectionRange(len, len);
+                    autosize.update(el);
+                }
+            });
+        };
+
+        window.addEventListener("reply-to-user", onReply);
+        return () => window.removeEventListener("reply-to-user", onReply);
+    }, []);
+
     return (
         <Flex mx="auto">
             <Box w="full">

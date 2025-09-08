@@ -17,7 +17,7 @@ import {
     Link,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaRegHeart, FaEdit, FaTrash } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaReply, FaEdit, FaTrash } from "react-icons/fa";
 import autosize from "autosize";
 
 import { useAuth } from "../contexts/useAuth.js";
@@ -202,6 +202,10 @@ const Comment = ({
         }
     };
 
+    const handleReply = () => {
+        window.dispatchEvent(new CustomEvent("reply-to-user", { detail: { username } }));
+    };
+
     return (
         <>
             <Box w="full">
@@ -313,6 +317,7 @@ const Comment = ({
                     <Text color={COLOR_4} cursor="pointer" onClick={openLikers} pl={2} pr={4} fontSize="sm">
                         {likes} {t("likes")}
                     </Text>
+                    <ActionButton icon={FaReply} onClick={handleReply} />
                     <Spacer />
                     {is_mine && (
                         <>
