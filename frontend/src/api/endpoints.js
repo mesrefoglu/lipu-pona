@@ -168,10 +168,11 @@ export const getPostsApi = async (username, cursor = null) => {
     return response.data;
 };
 
-export const createPostApi = async (imageFile, text) => {
+export const createPostApi = async (imageFile, text, altText) => {
     const formData = new FormData();
     formData.append("text", text);
     if (imageFile) formData.append("image", imageFile);
+    if (altText) formData.append("image_alt", altText);
 
     const response = await api.post("/create-post/", formData, {
         headers: { "Content-Type": "multipart/form-data" },

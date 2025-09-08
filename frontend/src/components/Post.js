@@ -90,6 +90,7 @@ const Post = ({
     name,
     profile_picture,
     image,
+    image_alt,
     text,
     created_at,
     like_count,
@@ -314,7 +315,7 @@ const Post = ({
                     <Link href={image} isExternal>
                         <Image
                             src={image}
-                            alt="post image"
+                            alt={image_alt && image_alt.trim() ? image_alt : `${name ? name : username}'s post`}
                             w="full"
                             borderRadius="md"
                             mb={3}

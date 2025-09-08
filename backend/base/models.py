@@ -46,6 +46,7 @@ class PendingRegistration(models.Model):
 class Post(models.Model):
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(upload_to=post_upload_path, blank=True, null=True)
+    image_alt = models.CharField(max_length=200, blank=True, default='')
     text = models.TextField(max_length=1000, blank=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     likes = models.ManyToManyField(MyUser, related_name='liked_posts', blank=True)

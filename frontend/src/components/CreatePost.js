@@ -24,16 +24,19 @@ import { COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { createPostApi } from "../api/endpoints.js";
 
 const MAX_CHARS = 1000;
+const MAX_ALT_CHARS = 250;
 
 const CreatePost = ({ onPostCreated }) => {
     const { user } = useAuth();
     const { t } = useLang();
 
     const [text, setText] = useState("");
+    const [altText, setAltText] = useState("");
     const [imageFile, setImageFile] = useState(null);
     const [error, setError] = useState("");
 
     const textInputRef = useRef();
+    const altInputRef = useRef();
     const fileInputRef = useRef();
 
     const handleImageChange = async (e) => {
@@ -52,6 +55,7 @@ const CreatePost = ({ onPostCreated }) => {
             });
             setImageFile(jpgFile);
             setError("");
+            requestAnimationFrame(() => altInputRef.current?.focus());
         } catch {
             setError(t("image_error"));
         }
@@ -59,11 +63,16 @@ const CreatePost = ({ onPostCreated }) => {
 
     const clearFile = () => {
         setImageFile(null);
+        setAltText("");
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleTextChange = (e) => {
         setText(e.target.value.slice(0, MAX_CHARS));
+    };
+
+    const handleAltTextChange = (e) => {
+        setAltText(e.target.value.slice(0, MAX_ALT_CHARS));
     };
 
     const handleSubmit = async (e) => {
@@ -73,9 +82,10 @@ const CreatePost = ({ onPostCreated }) => {
             return;
         }
         try {
-            const res = await createPostApi(imageFile, text.trim());
+            const res = await createPostApi(imageFile, text.trim(), altText.trim());
             if (onPostCreated) onPostCreated(res);
             setText("");
+            setAltText("");
             clearFile();
             setError("");
         } catch {
@@ -90,6 +100,14 @@ const CreatePost = ({ onPostCreated }) => {
             autosize.destroy(textAreaEl);
         };
     }, []);
+
+    useEffect(() => {
+        const el = altInputRef.current;
+        if (imageFile && el) {
+            autosize(el);
+            return () => autosize.destroy(el);
+        }
+    }, [imageFile]);
 
     return (
         <Flex py={4} mx="auto">
@@ -130,25 +148,53 @@ const CreatePost = ({ onPostCreated }) => {
                         </FormControl>
 
                         {imageFile && (
-                            <Box position="relative" w="full" mt={2}>
-                                <Image
-                                    src={URL.createObjectURL(imageFile)}
-                                    alt="preview"
-                                    borderRadius="md"
-                                    objectFit="cover"
-                                    w="full"
-                                />
-                                <IconButton
-                                    icon={<FiX />}
-                                    size="sm"
-                                    position="absolute"
-                                    top={2}
-                                    right={2}
-                                    bg="rgba(0,0,0,0.6)"
-                                    color="white"
-                                    onClick={clearFile}
-                                />
-                            </Box>
+                            <>
+                                <Box position="relative" w="full">
+                                    <Image
+                                        src={URL.createObjectURL(imageFile)}
+                                        alt="preview"
+                                        borderRadius="md"
+                                        objectFit="cover"
+                                        w="full"
+                                    />
+                                    <IconButton
+                                        icon={<FiX />}
+                                        size="sm"
+                                        position="absolute"
+                                        top={2}
+                                        right={2}
+                                        bg="rgba(0,0,0,0.6)"
+                                        color="white"
+                                        onClick={clearFile}
+                                        aria-label="Remove image"
+                                    />
+                                </Box>
+
+                                <FormControl id="alt_text">
+                                    <Box position="relative" w="full">
+                                        <Textarea
+                                            value={altText}
+                                            placeholder={t("alt_text_placeholder")}
+                                            onChange={handleAltTextChange}
+                                            ref={altInputRef}
+                                            rows={1}
+                                            borderColor="transparent"
+                                            _hover={{ borderColor: "transparent" }}
+                                            focusBorderColor="transparent"
+                                            color={COLOR_4}
+                                        />
+                                        <Text
+                                            fontSize="xs"
+                                            color={altText.length === MAX_ALT_CHARS ? "red.500" : "orange.500"}
+                                            position="absolute"
+                                            right={3}
+                                            pointerEvents="none"
+                                        >
+                                            {altText.length > MAX_ALT_CHARS - 100 ? MAX_ALT_CHARS - altText.length : ""}
+                                        </Text>
+                                    </Box>
+                                </FormControl>
+                            </>
                         )}
 
                         <HStack w="full">
