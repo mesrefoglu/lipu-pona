@@ -73,6 +73,17 @@ def DeleteRecentNotification(recipient, actor, verb, target_post_id=None):
 def CreateNotification(recipient, actor, verb, target_post_id=None):
     if recipient == actor:
         return None
+    elif verb == Notification.VERB_FOLLOW and not recipient.notify_follow:
+        return None
+    elif verb == Notification.VERB_LIKE and not recipient.notify_like:
+        return None
+    elif verb == Notification.VERB_COMMENT and not recipient.notify_comment:
+        return None
+    elif verb in [Notification.VERB_MENTION_POST, Notification.VERB_MENTION_COMMENT] and not recipient.notify_mention:
+        return None
+    elif verb == Notification.VERB_FR_ACCEPTED and not recipient.notify_fr_accepted:
+        return None
+
     return Notification.objects.create(
         recipient=recipient,
         actor=actor,
@@ -85,7 +96,7 @@ def CheckForMentions(text, user, is_post, post_id):
         mentioned_usernames = set(part[1:] for part in text.split() if part.startswith('@'))
         mentioned_users = MyUser.objects.filter(username__in=mentioned_usernames)
         for mentioned_user in mentioned_users:
-            if mentioned_user != user and mentioned_user.notify_mention and (not mentioned_user.private or user in mentioned_user.followers.all()):
+            if mentioned_user != user and (not mentioned_user.private or user in mentioned_user.followers.all()):
                 CreateNotification(
                     mentioned_user,
                     user,
@@ -467,8 +478,7 @@ def ToggleFollow(request):
             return Response({"success": True, "following": False, "requested": True}, status=status.HTTP_201_CREATED)
         else:
             target.followers.add(user)
-            if target.notify_follow:
-                CreateNotification(target, user, Notification.VERB_FOLLOW)
+            CreateNotification(target, user, Notification.VERB_FOLLOW)
             return Response({"success": True, "following": True, "requested": False}, status=status.HTTP_200_OK)
     except IntegrityError:
         return Response({"error": "Could not update follow status."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -501,8 +511,7 @@ def RespondFollowRequest(request, id):
     if action == 'accept':
         request.user.followers.add(fr.requester)
         CreateNotification(fr.requester, request.user, Notification.VERB_FR_ACCEPTED)
-        if request.user.notify_follow:
-            CreateNotification(request.user, fr.requester, Notification.VERB_FOLLOW)
+        CreateNotification(request.user, fr.requester, Notification.VERB_FOLLOW)
     fr.delete()
 
     return Response({"success": True}, status=status.HTTP_200_OK)
@@ -525,8 +534,7 @@ def RespondAllFollowRequests(request):
         if action == 'accept':
             user.followers.add(fr.requester)
             CreateNotification(fr.requester, user, Notification.VERB_FR_ACCEPTED)
-            if user.notify_follow:
-                CreateNotification(user, fr.requester, Notification.VERB_FOLLOW)
+            CreateNotification(user, fr.requester, Notification.VERB_FOLLOW)
         fr.delete()
 
     return Response({"success": True}, status=status.HTTP_200_OK)
@@ -581,6 +589,11 @@ def EditUser(request):
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
     data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
+
+    notification_fields = ['notify_follow', 'notify_like', 'notify_comment', 'notify_mention', 'notify_fr_accepted']
+    for field in notification_fields:
+        if field in data:
+            data[field] = data[field].lower() == 'true' if isinstance(data[field], str) else data[field]
 
     serializer = MyUserSerializer(user, data, partial=True)
 

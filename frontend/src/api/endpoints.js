@@ -124,7 +124,20 @@ export const markNotificationsReadApi = async (id = "all") => {
     return response.data;
 };
 
-export const editUserApi = async ({ username, name, bio, imageFile, removedPicture, newPassword, currentPassword }) => {
+export const editUserApi = async ({
+    username,
+    name,
+    bio,
+    imageFile,
+    removedPicture,
+    newPassword,
+    currentPassword,
+    notify_follow,
+    notify_like,
+    notify_comment,
+    notify_mention,
+    notify_fr_accepted,
+}) => {
     const formData = new FormData();
     formData.append("username", username);
     formData.append("first_name", name);
@@ -140,6 +153,13 @@ export const editUserApi = async ({ username, name, bio, imageFile, removedPictu
         formData.append("new_password", newPassword);
         formData.append("current_password", currentPassword);
     }
+
+    // Add notification preferences
+    if (notify_follow !== undefined) formData.append("notify_follow", notify_follow);
+    if (notify_like !== undefined) formData.append("notify_like", notify_like);
+    if (notify_comment !== undefined) formData.append("notify_comment", notify_comment);
+    if (notify_mention !== undefined) formData.append("notify_mention", notify_mention);
+    if (notify_fr_accepted !== undefined) formData.append("notify_fr_accepted", notify_fr_accepted);
 
     try {
         await api.patch("/edit-user/", formData, {

@@ -58,6 +58,7 @@ class MyUserSerializer(serializers.ModelSerializer):
         fields = [
             'email', 'username', 'first_name', 'bio', 'profile_picture',
             'post_count', 'follower_count', 'following_count',
+            'notify_follow', 'notify_like', 'notify_comment', 'notify_mention', 'notify_fr_accepted',
         ]
         read_only_fields = [
             'email', 'post_count', 'follower_count', 'following_count',
