@@ -16,8 +16,6 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshErr) {
                 console.error("Token refresh failed:", refreshErr);
-                window.dispatchEvent(new CustomEvent("auth:logout"));
-                return Promise.reject(refreshErr);
             }
         }
         return Promise.reject(error);
