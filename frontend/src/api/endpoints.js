@@ -68,6 +68,11 @@ export const confirmEmailApi = async (activation_key) => {
     return response.data;
 };
 
+export const refreshTokenApi = async () => {
+    const response = await api.post("/token/refresh/");
+    return response.data;
+};
+
 export const logoutApi = async () => {
     await api.post("/logout/");
     return { success: true };
@@ -161,7 +166,6 @@ export const editUserApi = async ({
         formData.append("current_password", currentPassword);
     }
 
-    // Add private and notification preferences
     if (isPrivate !== undefined) formData.append("private", isPrivate);
     if (notify_follow !== undefined) formData.append("notify_follow", notify_follow);
     if (notify_like !== undefined) formData.append("notify_like", notify_like);
