@@ -4,15 +4,18 @@ import { Box, VStack, Spinner, Alert, AlertIcon, Text, Button } from "@chakra-ui
 
 import { COLOR_1, COLOR_3, COLOR_4 } from "../constants/constants.js";
 import { getPostApi, getCommentsApi } from "../api/endpoints.js";
+import { useLang } from "../contexts/useLang.js";
 import Post from "../components/Post.js";
 import CreateComment from "../components/CreateComment.js";
 import Comment from "../components/Comment.js";
 
 const SinglePost = () => {
     const { id } = useParams();
+    const { t } = useLang();
     const [post, setPost] = useState(null);
     const [loadingPost, setLoadingPost] = useState(true);
     const [errorPost, setErrorPost] = useState("");
+    const [privatePostUsername, setPrivatePostUsername] = useState("");
 
     const [comments, setComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
@@ -27,8 +30,13 @@ const SinglePost = () => {
 
         getPostApi(id)
             .then((data) => setPost(data))
-            .catch(() => {
-                setErrorPost("lipu ni li lon ala anu len. ante la, jan li weka e lipu ni.");
+            .catch((error) => {
+                if (error.response?.status === 403) {
+                    setErrorPost("private");
+                    setPrivatePostUsername(error.response?.data?.username || "");
+                } else {
+                    setErrorPost("generic");
+                }
             })
             .finally(() => setLoadingPost(false));
     }, [id]);
@@ -81,7 +89,13 @@ const SinglePost = () => {
             <Box maxW="container.sm" mx="auto" py={8}>
                 <Alert status="error" rounded="md">
                     <AlertIcon />
-                    {errorPost}
+                    {errorPost === "private" && privatePostUsername
+                        ? t("private_post_message").replace("{username}", privatePostUsername)
+                        : errorPost === "private"
+                        ? "This user has a private profile."
+                        : errorPost === "generic"
+                        ? t("post_not_found")
+                        : errorPost}
                 </Alert>
             </Box>
         );
@@ -91,7 +105,7 @@ const SinglePost = () => {
         return (
             <Box maxW="container.sm" mx="auto" py={8}>
                 <Text color={COLOR_1} textAlign="center">
-                    sitelen li lon ala.
+                    {t("post_not_found")}
                 </Text>
             </Box>
         );

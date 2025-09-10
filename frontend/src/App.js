@@ -27,6 +27,7 @@ import PrivacyPolicy from "./routes/legal/PrivacyPolicy.js";
 import CookiesNotice from "./routes/legal/Cookies.js";
 import Notifications from "./routes/Notifications.js";
 import LikedPosts from "./routes/LikedPosts.js";
+import FollowRequests from "./routes/FollowRequests.js";
 
 function App() {
     return (
@@ -71,6 +72,16 @@ function App() {
                                     <Layout>
                                         <PrivateRoute>
                                             <Notifications />
+                                        </PrivateRoute>
+                                    </Layout>
+                                }
+                            />
+                            <Route
+                                path="/account/follow-requests"
+                                element={
+                                    <Layout>
+                                        <PrivateRoute>
+                                            <FollowRequests />
                                         </PrivateRoute>
                                     </Layout>
                                 }

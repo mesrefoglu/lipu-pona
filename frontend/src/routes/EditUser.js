@@ -27,7 +27,7 @@ import { FiUpload, FiX } from "react-icons/fi";
 import { COLOR_1, COLOR_3, COLOR_4, PASSWORD_REGEX } from "../constants/constants.js";
 import { useAuth } from "../contexts/useAuth.js";
 import { useLang } from "../contexts/useLang.js";
-import { checkUsernameApi, editUserApi, deleteUserApi } from "../api/endpoints.js";
+import { checkUsernameApi, editUserApi, deleteUserApi, respondFollowRequestApi } from "../api/endpoints.js";
 import ConfirmDialog from "../components/ConfirmDialogue.js";
 
 const MAX_CHARS = 250;
@@ -84,6 +84,7 @@ const EditUser = () => {
         newPassword: "",
         confirmPassword: "",
         currentPassword: "",
+        private: user?.private ?? false,
         notify_follow: user?.notify_follow ?? true,
         notify_like: user?.notify_like ?? true,
         notify_comment: user?.notify_comment ?? true,
@@ -104,7 +105,6 @@ const EditUser = () => {
     const [error, setError] = useState("");
     const errors = getErrors(values, usernameTaken, t);
 
-    // Sync notification preferences when user data changes
     useEffect(() => {
         if (user) {
             setValues((prevValues) => ({
@@ -113,6 +113,7 @@ const EditUser = () => {
                 username: user.username || "",
                 name: user.first_name || "",
                 bio: user.bio || "",
+                private: user.private ?? false,
                 notify_follow: user.notify_follow ?? true,
                 notify_like: user.notify_like ?? true,
                 notify_comment: user.notify_comment ?? true,
@@ -191,7 +192,6 @@ const EditUser = () => {
 
         setError("");
 
-        // Only validate relevant fields based on active tab
         const relevantErrors =
             activeTab === "profile"
                 ? { username: errors.username, name: errors.name }
@@ -204,6 +204,9 @@ const EditUser = () => {
         const hasRelevantErrors = Object.values(relevantErrors).some(Boolean);
         if (hasRelevantErrors) return;
 
+        const wasPrivate = user?.private;
+        const makingPublic = wasPrivate && !values.private;
+
         const { success, error: apiError } = await editUserApi({
             username: values.username,
             name: values.name,
@@ -212,6 +215,7 @@ const EditUser = () => {
             removedPicture,
             newPassword: values.newPassword,
             currentPassword: values.currentPassword,
+            private: values.private,
             notify_follow: values.notify_follow,
             notify_like: values.notify_like,
             notify_comment: values.notify_comment,
@@ -226,6 +230,14 @@ const EditUser = () => {
                 setError(t("update_error_generic"));
             }
             return;
+        }
+
+        if (makingPublic) {
+            try {
+                await respondFollowRequestApi("accept");
+            } catch (error) {
+                console.warn("Failed to auto-accept follow requests:", error);
+            }
         }
 
         if (values.newPassword) {
@@ -299,6 +311,24 @@ const EditUser = () => {
                         {values.bio.length > MAX_CHARS - 100 ? MAX_CHARS - values.bio.length : ""}
                     </Text>
                 </Box>
+            </FormControl>
+
+            <FormControl id="private_profile">
+                <HStack justify="space-between" w="full">
+                    <VStack align="flex-start" spacing={0}>
+                        <Text color={COLOR_1} fontWeight="medium">
+                            {t("private_profile")}
+                        </Text>
+                        <Text color="gray.500" fontSize="sm">
+                            {t("private_profile_description")}
+                        </Text>
+                    </VStack>
+                    <Switch
+                        isChecked={values.private}
+                        onChange={(e) => setValues((v) => ({ ...v, private: e.target.checked }))}
+                        colorScheme="teal"
+                    />
+                </HStack>
             </FormControl>
 
             <FormControl id="profile_picture">

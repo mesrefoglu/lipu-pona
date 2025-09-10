@@ -60,15 +60,23 @@ logger = logging.getLogger(__name__)
 samesite = "None" if settings.DEBUG else "Lax"
 
 def DeleteRecentNotification(recipient, actor, verb, target_post_id=None):
-    new_notification = Notification.objects.filter(
-        recipient=recipient,
-        actor=actor,
-        verb=verb,
-        target_post_id=target_post_id,
-        created_at__gte=timezone.now() - timezone.timedelta(hours=1)
-    ).first()
-    if new_notification:
-        new_notification.delete()
+    if verb == Notification.VERB_FOLLOW_REQUEST:
+        notifications = Notification.objects.filter(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            target_post_id=target_post_id,
+        )
+    else:
+        notifications = Notification.objects.filter(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            target_post_id=target_post_id,
+            created_at__gte=timezone.now() - timezone.timedelta(hours=1)
+        )
+
+    notifications.delete()
 
 def CreateNotification(recipient, actor, verb, target_post_id=None):
     if recipient == actor:
@@ -390,8 +398,17 @@ def GetUserProfile(request, username):
     try:
         serializer = MyUserSerializer(user, context={'request': request})
         is_following = request.user in user.followers.all()
+        follow_request_sent = False
+        
+        if not is_following and user.private:
+            follow_request_sent = FollowRequest.objects.filter(requester=request.user, target=user).exists()
 
-        return Response({**serializer.data, 'is_self': request.user.username == username, 'is_following': is_following})
+        return Response({
+            **serializer.data, 
+            'is_self': request.user.username == username, 
+            'is_following': is_following,
+            'follow_request_sent': follow_request_sent
+        })
     except:
         return Response({"error": "Error serializing user data."}, status=404)
 
@@ -472,6 +489,7 @@ def ToggleFollow(request):
             fr = FollowRequest.objects.filter(requester=user, target=target).first()
             if fr:
                 fr.delete()
+                DeleteRecentNotification(target, user, Notification.VERB_FOLLOW_REQUEST)
                 return Response({"success": True, "requested": False}, status=status.HTTP_200_OK)
             FollowRequest.objects.create(requester=user, target=target)
             CreateNotification(target, user, Notification.VERB_FOLLOW_REQUEST)
@@ -525,7 +543,8 @@ def RespondAllFollowRequests(request):
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
     user = request.user
-    if not user.private:
+    # Only check for private profile when rejecting, allow accepting even if not private
+    if action == 'reject' and not user.private:
         return Response({"error": "You do not have a private profile."}, status=status.HTTP_403_FORBIDDEN)
 
     follow_requests = FollowRequest.objects.filter(target=user)
@@ -590,8 +609,8 @@ def EditUser(request):
 
     data['bio'] = normalize_whitespace(data.get('bio', '')).strip()
 
-    notification_fields = ['notify_follow', 'notify_like', 'notify_comment', 'notify_mention', 'notify_fr_accepted']
-    for field in notification_fields:
+    boolean_fields = ['private', 'notify_follow', 'notify_like', 'notify_comment', 'notify_mention', 'notify_fr_accepted']
+    for field in boolean_fields:
         if field in data:
             data[field] = data[field].lower() == 'true' if isinstance(data[field], str) else data[field]
 
@@ -610,6 +629,7 @@ def EditUser(request):
         user.save()
 
     serializer.save()
+
     return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])
@@ -667,7 +687,7 @@ def GetPost(request, id):
         return Response({"error": "Post not found."}, status=404)
 
     if request.user != post.user and post.user.private and request.user not in post.user.followers.all():
-        return Response({"error": "This user has a private profile."}, status=403)
+        return Response({"error": "This user has a private profile.", "username": post.user.username}, status=403)
 
     serializer = PostSerializer(post, context={'request': request})
 

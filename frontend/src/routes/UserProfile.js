@@ -37,11 +37,14 @@ const UserProfile = () => {
     const [error, setError] = useState(null);
     const [isSelf, setIsSelf] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
+    const [followRequestSent, setFollowRequestSent] = useState(false);
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [nextCursor, setNextCursor] = useState(null);
+    const [postsError, setPostsError] = useState(null);
 
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [unfollowConfirmOpen, setUnfollowConfirmOpen] = useState(false);
 
     const [profile, setProfile] = useState({
         username: "",
@@ -85,13 +88,50 @@ const UserProfile = () => {
     };
 
     const handleFollowButton = async () => {
+        if (isFollowing && profile.private) {
+            setUnfollowConfirmOpen(true);
+            return;
+        }
+
         const data = await followApi(username);
         if (data) {
-            setIsFollowing(!isFollowing);
+            if (data.following !== undefined) {
+                setIsFollowing(data.following);
+                setFollowRequestSent(data.requested || false);
+                if (data.following || (!data.following && !data.requested)) {
+                    setProfile((prev) => ({
+                        ...prev,
+                        follower_count: data.following ? prev.follower_count + 1 : prev.follower_count - 1,
+                    }));
+                }
+            } else if (data.requested !== undefined) {
+                setFollowRequestSent(data.requested);
+            }
+
+            if (data.following || !data.requested) {
+                setPosts([]);
+                setNextCursor(null);
+                setPostsError(null);
+                loadPosts(null);
+            }
+        }
+    };
+
+    const handleUnfollowPrivateConfirm = async () => {
+        setUnfollowConfirmOpen(false);
+        const data = await followApi(username);
+        if (data) {
+            setIsFollowing(false);
+            setFollowRequestSent(false);
             setProfile((prev) => ({
                 ...prev,
-                follower_count: isFollowing ? prev.follower_count - 1 : prev.follower_count + 1,
+                follower_count: prev.follower_count - 1,
             }));
+
+            setPosts([]);
+            setNextCursor(null);
+            setPostsError(null);
+            loadPosts(null);
         }
     };
 
@@ -115,6 +155,7 @@ const UserProfile = () => {
                 const data = await getUserApi(username, { signal: controller.signal });
                 setIsSelf(data.is_self);
                 setIsFollowing(data.is_following);
+                setFollowRequestSent(data.follow_request_sent || false);
                 setProfile(data);
             } catch {
                 setError(t("profile_not_found"));
@@ -128,10 +169,17 @@ const UserProfile = () => {
     const loadPosts = useCallback(
         async (cursor = null) => {
             setLoadingPosts(true);
+            setPostsError(null);
             try {
                 const data = await getPostsApi(username, cursor);
                 setPosts((prev) => [...prev, ...data.results]);
                 setNextCursor(data.next ? data.next : false);
+            } catch (error) {
+                if (error.response?.status === 403) {
+                    setPostsError("private");
+                } else {
+                    setPostsError("generic");
+                }
             } finally {
                 setLoadingPosts(false);
             }
@@ -226,16 +274,18 @@ const UserProfile = () => {
                         </HStack>
                     ) : (
                         <Button
-                            bg={isFollowing ? "transparent" : COLOR_3}
+                            bg={isFollowing ? "transparent" : followRequestSent ? "transparent" : COLOR_3}
                             w="auto"
                             border="2px"
-                            borderColor={isFollowing ? COLOR_3 : "transparent"}
+                            borderColor={isFollowing || followRequestSent ? COLOR_3 : "transparent"}
                             color={textColor}
-                            _hover={isFollowing ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }}
+                            _hover={
+                                isFollowing || followRequestSent ? { bg: COLOR_3 } : { bg: COLOR_4, color: COLOR_1 }
+                            }
                             size="sm"
                             onClick={handleFollowButton}
                         >
-                            {isFollowing ? t("unfollow") : t("follow")}
+                            {isFollowing ? t("unfollow") : followRequestSent ? t("follow_request_cancel") : t("follow")}
                         </Button>
                     )}
 
@@ -247,14 +297,20 @@ const UserProfile = () => {
                             <Text color={secondaryTextColor}>{t("posts")}</Text>
                         </HStack>
 
-                        <HStack onClick={openFollowers} cursor="pointer">
+                        <HStack
+                            onClick={profile.private && !isSelf && !isFollowing ? undefined : openFollowers}
+                            cursor={profile.private && !isSelf && !isFollowing ? "default" : "pointer"}
+                        >
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.follower_count}
                             </Text>
                             <Text color={secondaryTextColor}>{t("followers")}</Text>
                         </HStack>
 
-                        <HStack onClick={openFollowing} cursor="pointer">
+                        <HStack
+                            onClick={profile.private && !isSelf && !isFollowing ? undefined : openFollowing}
+                            cursor={profile.private && !isSelf && !isFollowing ? "default" : "pointer"}
+                        >
                             <Text fontWeight="bold" color={textColor}>
                                 {profile.following_count}
                             </Text>
@@ -286,24 +342,42 @@ const UserProfile = () => {
             )}
 
             <VStack spacing={6} mt={4}>
-                {posts.map((post, i) =>
-                    i === posts.length - 1 ? (
-                        <Box ref={lastPostRef} w="full" key={post.id}>
+                {postsError === "private" ? (
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        textAlign="center"
+                        height="200px"
+                        borderRadius="md"
+                        bg="rgba(0, 0, 0, 0.6)"
+                        w="full"
+                    >
+                        <Text fontSize="lg" color={textColor} mb={2}>
+                            {t("private_profile_message")}
+                        </Text>
+                    </Box>
+                ) : (
+                    posts.map((post, i) =>
+                        i === posts.length - 1 ? (
+                            <Box ref={lastPostRef} w="full" key={post.id}>
+                                <Post
+                                    {...post}
+                                    name={profile.first_name}
+                                    profile_picture={profile.profile_picture}
+                                    onDelete={handlePostDeleted}
+                                />
+                            </Box>
+                        ) : (
                             <Post
+                                key={post.id}
                                 {...post}
                                 name={profile.first_name}
                                 profile_picture={profile.profile_picture}
                                 onDelete={handlePostDeleted}
                             />
-                        </Box>
-                    ) : (
-                        <Post
-                            key={post.id}
-                            {...post}
-                            name={profile.first_name}
-                            profile_picture={profile.profile_picture}
-                            onDelete={handlePostDeleted}
-                        />
+                        )
                     )
                 )}
             </VStack>
@@ -315,6 +389,20 @@ const UserProfile = () => {
                 title={t("logout_confirm_title")}
                 description=""
                 confirmText={t("logout_confirm_yes")}
+                cancelText={t("logout_confirm_no")}
+                headerTextColor={COLOR_1}
+                bodyTextColor={COLOR_1}
+                cancelButtonColorScheme="gray"
+                confirmButtonColorScheme="red"
+            />
+
+            <ConfirmDialog
+                isOpen={unfollowConfirmOpen}
+                onClose={() => setUnfollowConfirmOpen(false)}
+                onConfirm={handleUnfollowPrivateConfirm}
+                title={t("unfollow_private_confirm_title")}
+                description=""
+                confirmText={t("unfollow_private_confirm_button")}
                 cancelText={t("logout_confirm_no")}
                 headerTextColor={COLOR_1}
                 bodyTextColor={COLOR_1}

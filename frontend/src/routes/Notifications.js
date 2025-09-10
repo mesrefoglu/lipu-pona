@@ -97,8 +97,9 @@ const Notifications = () => {
             return;
         }
         window.dispatchEvent(new Event("refresh-notifs"));
-        if (n.verb === "follow_request") return;
-        else if (n.verb === "follow" || n.verb === "fr_accepted") {
+        if (n.verb === "follow_request") {
+            navigate("/account/follow-requests");
+        } else if (n.verb === "follow" || n.verb === "fr_accepted") {
             navigate(`/${n.actor.username}`);
         } else {
             navigate(`/post/${n.target_post_id}`);

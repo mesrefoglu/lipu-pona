@@ -103,6 +103,12 @@ export const followRequestApi = async (username) => {
     return response.data;
 };
 
+export const getFollowRequestsApi = async (cursor = null) => {
+    const url = cursor ? cursor : "/follow-requests/";
+    const response = await api.get(url);
+    return response.data;
+};
+
 export const respondFollowRequestApi = async (action, id = "all") => {
     const response = await api.post(`/follow-requests/respond/${id}/`, { action: action });
     return response.data;
@@ -132,6 +138,7 @@ export const editUserApi = async ({
     removedPicture,
     newPassword,
     currentPassword,
+    private: isPrivate,
     notify_follow,
     notify_like,
     notify_comment,
@@ -154,7 +161,8 @@ export const editUserApi = async ({
         formData.append("current_password", currentPassword);
     }
 
-    // Add notification preferences
+    // Add private and notification preferences
+    if (isPrivate !== undefined) formData.append("private", isPrivate);
     if (notify_follow !== undefined) formData.append("notify_follow", notify_follow);
     if (notify_like !== undefined) formData.append("notify_like", notify_like);
     if (notify_comment !== undefined) formData.append("notify_comment", notify_comment);

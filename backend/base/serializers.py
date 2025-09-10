@@ -56,7 +56,7 @@ class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = [
-            'email', 'username', 'first_name', 'bio', 'profile_picture',
+            'email', 'username', 'first_name', 'bio', 'profile_picture', 'private',
             'post_count', 'follower_count', 'following_count',
             'notify_follow', 'notify_like', 'notify_comment', 'notify_mention', 'notify_fr_accepted',
         ]

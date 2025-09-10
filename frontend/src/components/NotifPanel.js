@@ -43,7 +43,9 @@ const NotifPanel = ({ notifications, onClose, onMarkRead }) => {
             return;
         }
         onClose();
-        if (n.verb === "follow" || n.verb === "fr_accepted") {
+        if (n.verb === "follow_request") {
+            navigate("/account/follow-requests");
+        } else if (n.verb === "follow" || n.verb === "fr_accepted") {
             navigate(`/${n.actor.username}`);
         } else {
             navigate(`/post/${n.target_post_id}`);
