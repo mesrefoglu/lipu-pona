@@ -13,20 +13,19 @@ EMAIL_BACKEND      = env(
     'DJANGO_EMAIL_BACKEND',
     default='django.core.mail.backends.smtp.EmailBackend'
 )
-
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = env('SENDGRID_API_KEY', default='')
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
+EMAIL_HOST_PASSWORD = env(
+    'EMAIL_HOST_PASSWORD',
+    default=env('RESEND_API_KEY', default=env('SENDGRID_API_KEY', default=''))
+)
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
 DEBUG = env('DJANGO_DEBUG', default=False)
-
-SENDGRID_API_KEY           = env('SENDGRID_API_KEY', default='')
-SENDGRID_SANDBOX_MODE_IN_DEBUG = False
-SENDGRID_ECHO_TO_STDOUT    = DEBUG
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
 

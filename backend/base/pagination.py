@@ -11,7 +11,7 @@ class CommentCursorPagination(CursorPagination):
 
 class DiscoverCursorPagination(CursorPagination):
     page_size = 5
-    ordering = ['-score', '-created_at']
+    ordering = ['-score']
 
 class FollowRequestPagination(CursorPagination):
     page_size = 10

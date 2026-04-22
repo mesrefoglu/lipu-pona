@@ -543,7 +543,7 @@ def RespondAllFollowRequests(request):
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
     user = request.user
-    # Only check for private profile when rejecting, allow accepting even if not private
+
     if action == 'reject' and not user.private:
         return Response({"error": "You do not have a private profile."}, status=status.HTTP_403_FORBIDDEN)
 
